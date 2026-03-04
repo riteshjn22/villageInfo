@@ -23,7 +23,7 @@ type FormField = keyof typeof initialFormState;
 
 type State = { _id: string; state: string; state_slug: string };
 type District = { _id: string; district: string; district_slug: string };
-type Tehsil = { _id: string; block_tehsil: string; block_slug: string };
+type Tehsil = { _id: string; tehsil: string; tehsil_slug: string };
 type Village = { _id: string; village_name: string; village_slug: string };
 
 const FIELDS: { name: FormField; label: string; type: string }[] = [
@@ -171,7 +171,7 @@ function ContentPage() {
     getVillages({
       state_slug: selectedState.state_slug,
       district_slug: selectedDistrict.district_slug,
-      block_slug: selectedTehsil.block_slug,
+      tehsil_slug: selectedTehsil.tehsil_slug,
     })
       .then((data) => setVillages(Array.isArray(data) ? data : []))
       .catch(() => setVillages([]))
@@ -211,7 +211,7 @@ function ContentPage() {
     fetchAndSetContent("Tehsil", {
       state_slug: selectedState.state_slug,
       district_slug: selectedDistrict.district_slug,
-      block_slug: selectedTehsil.block_slug,
+      tehsil_slug: selectedTehsil.tehsil_slug,
     });
   }, [selectedTehsil, activeTab]);
 
@@ -228,7 +228,7 @@ function ContentPage() {
     fetchAndSetContent("Village", {
       state_slug: selectedState.state_slug,
       district_slug: selectedDistrict.district_slug,
-      block_slug: selectedTehsil.block_slug,
+      tehsil_slug: selectedTehsil.tehsil_slug,
       village_slug: selectedVillage.village_slug,
     });
   }, [selectedVillage, activeTab]);
@@ -273,7 +273,7 @@ function ContentPage() {
       if (selectedState) slugParams.state_slug = selectedState.state_slug;
       if (selectedDistrict)
         slugParams.district_slug = selectedDistrict.district_slug;
-      if (selectedTehsil) slugParams.block_slug = selectedTehsil.block_slug;
+      if (selectedTehsil) slugParams.tehsil_slug = selectedTehsil.tehsil_slug;
       if (selectedVillage)
         slugParams.village_slug = selectedVillage.village_slug;
 
@@ -297,7 +297,7 @@ function ContentPage() {
     activeTab === "Village"
       ? selectedVillage?.village_name
       : activeTab === "Tehsil"
-        ? selectedTehsil?.block_tehsil
+        ? selectedTehsil?.tehsil
         : activeTab === "District"
           ? selectedDistrict?.district
           : activeTab === "State"
@@ -404,10 +404,10 @@ function ContentPage() {
             ) : (
               <select
                 className="border rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-52"
-                value={selectedTehsil?.block_slug ?? ""}
+                value={selectedTehsil?.tehsil_slug ?? ""}
                 onChange={(e) => {
                   setSelectedTehsil(
-                    tehsils.find((t) => t.block_slug === e.target.value) ??
+                    tehsils.find((t) => t.tehsil_slug === e.target.value) ??
                       null,
                   );
                   setSuccess("");
@@ -415,8 +415,8 @@ function ContentPage() {
               >
                 <option value="">-- Select Tehsil --</option>
                 {tehsils.map((t) => (
-                  <option key={t._id} value={t.block_slug}>
-                    {t.block_tehsil}
+                  <option key={t._id} value={t.tehsil_slug}>
+                    {t.tehsil}
                   </option>
                 ))}
               </select>

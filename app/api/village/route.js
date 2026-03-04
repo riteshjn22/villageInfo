@@ -20,7 +20,7 @@ export async function GET(req) {
       const village = await Village.findOne({
         state_slug,
         district_slug,
-        block_slug,
+        tehsil_slug: block_slug,
         village_slug,
       }).lean();
 
@@ -39,10 +39,12 @@ export async function GET(req) {
       const villages = await Village.find({
         state_slug,
         district_slug,
-        block_slug,
+        tehsil_slug: block_slug,
       })
-        .sort({ village_name: 1 })
-        .select("village_name village_slug total_population nearest_town")
+        .sort({ village: 1 })
+        .select(
+          "village village_slug total_population nearest_town number_of_households sex_ratio_percent literates_total_percent state_slug district_slug tehsil_slug",
+        )
         .lean();
 
       return NextResponse.json({ allVillages: villages }, { status: 200 });
@@ -52,11 +54,11 @@ export async function GET(req) {
     if (pageIndex) {
       const pageIndex = parseInt(searchParams.get("pageIndex"));
       const villages = await Village.find()
-        .sort({ village_name: 1 })
+        .sort({ village: 1 })
         .skip(pageIndex * SITE_MAP_PER_PAGE)
         .limit(SITE_MAP_PER_PAGE)
         .select(
-          "village_name village_slug state state_slug district district_slug block_slug block_tehsil total_population updatedAt",
+          "village village_slug state state_slug district district_slug tehsil_slug block_tehsil total_population updatedAt",
         )
         .lean();
 
@@ -73,7 +75,7 @@ export async function GET(req) {
     return NextResponse.json(
       {
         error:
-          "state_slug, district_slug and block_slug parameters are required",
+          "state_slug, district_slug and tehsil_slug parameters are required",
       },
       { status: 400 },
     );

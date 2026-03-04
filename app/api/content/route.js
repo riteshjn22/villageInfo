@@ -5,8 +5,8 @@ import Content from "@/lib/models/content";
 // GET /api/content?page_id=home
 // GET /api/content?page_id=state&state_slug=maharashtra
 // GET /api/content?page_id=district&state_slug=maharashtra&district_slug=pune
-// GET /api/content?page_id=block&state_slug=maharashtra&district_slug=pune&block_slug=haveli
-// GET /api/content?page_id=village&state_slug=maharashtra&district_slug=pune&block_slug=haveli&village_slug=uruli
+// GET /api/content?page_id=block&state_slug=maharashtra&district_slug=pune&tehsil_slug=haveli
+// GET /api/content?page_id=village&state_slug=maharashtra&district_slug=pune&tehsil_slug=haveli&village_slug=uruli
 export async function GET(req) {
   try {
     await connectDB();
@@ -15,7 +15,7 @@ export async function GET(req) {
     const page_id = searchParams.get("page_id");
     const state_slug = searchParams.get("state_slug");
     const district_slug = searchParams.get("district_slug");
-    const block_slug = searchParams.get("block_slug");
+    const tehsil_slug = searchParams.get("tehsil_slug");
     const village_slug = searchParams.get("village_slug");
 
     if (!page_id) {
@@ -28,7 +28,7 @@ export async function GET(req) {
     const query = buildSlugQuery(page_id, {
       state_slug,
       district_slug,
-      block_slug,
+      tehsil_slug,
       village_slug,
     });
 
@@ -52,8 +52,8 @@ export async function GET(req) {
 // Body for home:    { page_id: "home", title, description, top_content, bottom_content, blog_content }
 // Body for state:   { page_id: "state", state_slug, ...fields }
 // Body for district:{ page_id: "district", state_slug, district_slug, ...fields }
-// Body for block:   { page_id: "block", state_slug, district_slug, block_slug, ...fields }
-// Body for village: { page_id: "village", state_slug, district_slug, block_slug, village_slug, ...fields }
+// Body for block:   { page_id: "block", state_slug, district_slug, tehsil_slug, ...fields }
+// Body for village: { page_id: "village", state_slug, district_slug, tehsil_slug, village_slug, ...fields }
 export async function POST(req) {
   try {
     await connectDB();
@@ -63,7 +63,7 @@ export async function POST(req) {
       page_id,
       state_slug,
       district_slug,
-      block_slug,
+      tehsil_slug,
       village_slug,
       title,
       description,
@@ -83,7 +83,7 @@ export async function POST(req) {
     const slugError = validateSlugs(page_id, {
       state_slug,
       district_slug,
-      block_slug,
+      tehsil_slug,
       village_slug,
     });
     if (slugError) {
@@ -93,7 +93,7 @@ export async function POST(req) {
     const filter = buildSlugQuery(page_id, {
       state_slug,
       district_slug,
-      block_slug,
+      tehsil_slug,
       village_slug,
     });
 
@@ -112,7 +112,7 @@ export async function POST(req) {
           page_id,
           ...(state_slug !== undefined && { state_slug }),
           ...(district_slug !== undefined && { district_slug }),
-          ...(block_slug !== undefined && { block_slug }),
+          ...(tehsil_slug !== undefined && { tehsil_slug }),
           ...(village_slug !== undefined && { village_slug }),
         },
       },
@@ -139,7 +139,7 @@ export async function POST(req) {
 // Builds the MongoDB filter based on page_id level
 function buildSlugQuery(
   page_id,
-  { state_slug, district_slug, block_slug, village_slug },
+  { state_slug, district_slug, tehsil_slug, village_slug },
 ) {
   const query = { page_id };
 
@@ -148,8 +148,7 @@ function buildSlugQuery(
       if (village_slug) query.village_slug = village_slug;
     // falls through
     case "tehsil": // ← add this
-    case "block":
-      if (block_slug) query.block_slug = block_slug;
+      if (tehsil_slug) query.tehsil_slug = tehsil_slug;
     // falls through
     case "district":
       if (district_slug) query.district_slug = district_slug;
@@ -166,7 +165,7 @@ function buildSlugQuery(
 // Validates that the required slugs are present for the given page_id level
 function validateSlugs(
   page_id,
-  { state_slug, district_slug, block_slug, village_slug },
+  { state_slug, district_slug, tehsil_slug, village_slug },
 ) {
   switch (page_id.toLowerCase()) {
     case "state":
@@ -178,16 +177,15 @@ function validateSlugs(
         return "district_slug is required for page_id=district";
       break;
     case "tehsil": // ← add this
-    case "block":
       if (!state_slug) return "state_slug is required for page_id=block";
       if (!district_slug) return "district_slug is required for page_id=block";
-      if (!block_slug) return "block_slug is required for page_id=block";
+      if (!tehsil_slug) return "tehsil_slug is required for page_id=block";
       break;
     case "village":
       if (!state_slug) return "state_slug is required for page_id=village";
       if (!district_slug)
         return "district_slug is required for page_id=village";
-      if (!block_slug) return "block_slug is required for page_id=village";
+      if (!tehsil_slug) return "tehsil_slug is required for page_id=village";
       if (!village_slug) return "village_slug is required for page_id=village";
       break;
   }

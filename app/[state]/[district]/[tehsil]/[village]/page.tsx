@@ -1,66 +1,56 @@
+import About from "@/components/About";
+import Administrative from "@/components/Administrative";
+import Amenities from "@/components/Amenities";
 import BlogSection from "@/components/BlogSection";
+import Breadcrumb from "@/components/Breadcrumb";
 import HtmlContent from "@/components/htmlContent";
-// import WeatherWidget from "@/components/WeatherWidget";
+import Literacy from "@/components/Literacy";
+import Map from "@/components/Map";
+import PopularList from "@/components/PopularList";
+import Population from "@/components/Population";
+import TopChip from "@/components/TopChip";
+import TopLeft from "@/components/TopLeft";
+import Workers from "@/components/Workers";
 import { getContent, getVillages } from "@/utils/common";
 import { Metadata } from "next";
-import Link from "next/link";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 
-// ✅ Serve stale page while revalidating in background every 24hrs
 export const revalidate = 86400;
-
-// ✅ Allow new villages (not in generateStaticParams) to be SSR'd on first
-//    visit, then cached statically going forward
 export const dynamicParams = true;
 
+// ────────────────────────────────────────────────────────────
+// Cached fetchers — deduplicate calls between metadata + page
+// ────────────────────────────────────────────────────────────
+const getCachedVillage = cache(
+  (state: string, district: string, tehsil: string, village: string) =>
+    getVillages({
+      state_slug: state,
+      district_slug: district,
+      block_slug: tehsil,
+      village_slug: village,
+    }),
+);
+
+const getCachedContent = cache(
+  (state: string, district: string, tehsil: string, village: string) =>
+    getContent("village", {
+      state_slug: state,
+      district_slug: district,
+      block_slug: tehsil,
+      village_slug: village,
+    }),
+);
+
+// ────────────────────────────────────────────────────────────
+// Types
+// ────────────────────────────────────────────────────────────
 type VillageSlug = {
   state_slug: string;
   district_slug: string;
-  block_slug: string;
+  tehsil_slug: string;
   village_slug: string;
 };
-
-// ✅ Pre-render all villages at build time using pagination
-//    (your API returns count when no params, and paginated list via pageIndex)
-export async function generateStaticParams() {
-  try {
-    // Step 1: Get total count
-    const countRes = await fetch(`${process.env.HOST}/api/village`, {
-      cache: "no-store",
-    });
-    const { totalVillages } = await countRes.json();
-
-    if (!totalVillages) return [];
-
-    const LIMIT = 1000; // must match SITE_MAP_PER_PAGE in your constants
-    const totalPages = Math.ceil(totalVillages / LIMIT);
-
-    // Step 2: Fetch all pages in parallel
-    const pages = await Promise.all(
-      Array.from({ length: totalPages }, (_, i) =>
-        fetch(`${process.env.HOST}/api/village?pageIndex=${i}`, {
-          cache: "no-store",
-        })
-          .then((res) => res.json())
-          .then((data) => (data.allVillages ?? []) as VillageSlug[]),
-      ),
-    );
-
-    const villages = pages.flat();
-
-    console.log(`Generating static params for ${villages.length} villages...`);
-
-    return villages.map((v) => ({
-      state: v.state_slug,
-      district: v.district_slug,
-      tehsil: v.block_slug,
-      village: v.village_slug,
-    }));
-  } catch (error) {
-    console.error("generateStaticParams error:", error);
-    return [];
-  }
-}
 
 type Props = {
   params: Promise<{
@@ -71,98 +61,191 @@ type Props = {
   }>;
 };
 
+// ────────────────────────────────────────────────────────────
+// Static params
+// ────────────────────────────────────────────────────────────
+export async function generateStaticParams() {
+  try {
+    const countRes = await fetch(`${process.env.HOST}/api/village`, {
+      cache: "no-store",
+    });
+    const { totalVillages } = await countRes.json();
+    if (!totalVillages) return [];
+
+    const LIMIT = 1000;
+    const totalPages = Math.ceil(totalVillages / LIMIT);
+
+    const pages = await Promise.all(
+      Array.from({ length: totalPages }, (_, i) =>
+        fetch(`${process.env.HOST}/api/village?pageIndex=${i}`, {
+          cache: "no-store",
+        })
+          .then((res) => res.json())
+          .then((data) => (data.allVillages ?? []) as VillageSlug[]),
+      ),
+    );
+
+    return pages
+      .flat()
+      .filter(
+        (v) =>
+          v.state_slug && v.district_slug && v.tehsil_slug && v.village_slug,
+      )
+      .map((v) => ({
+        state: v.state_slug,
+        district: v.district_slug,
+        tehsil: v.tehsil_slug,
+        village: v.village_slug,
+      }));
+  } catch (error) {
+    console.error("generateStaticParams error:", error);
+    return [];
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Metadata
+// ────────────────────────────────────────────────────────────
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state, district, tehsil, village } = await params;
 
   const [content, villagesData] = await Promise.all([
-    getContent("village", {
-      state_slug: state,
-      district_slug: district,
-      block_slug: tehsil,
-      village_slug: village,
-    }),
-    getVillages({
-      state_slug: state,
-      district_slug: district,
-      block_slug: tehsil,
-      village_slug: village,
-    }),
+    getCachedContent(state, district, tehsil, village),
+    getCachedVillage(state, district, tehsil, village),
   ]);
 
-  const defaultTitle = `${villagesData?.village_name} Village, ${villagesData?.district}, ${villagesData?.state} – Population, Census, Map & Connectivity`;
-  const defaultDescription = `${villagesData?.village_name} is a village in ${villagesData?.block_tehsil} block of ${villagesData?.district} district of ${villagesData?.state}. This page provides village-level statistics including population data, connectivity and map details.`;
+  const title = content?.title || villagesData?.seo_title;
+  const description = content?.description || villagesData?.seo_description;
 
-  const title =
-    !content?.error && content?.title ? content.title : defaultTitle;
-  const description =
-    !content?.error && content?.description
-      ? content.description
-      : defaultDescription;
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description:
-        !content?.error && content?.description
-          ? content.description
-          : `${villagesData?.village_name} is a village in ${villagesData?.block_tehsil} block of ${villagesData?.district} district of ${villagesData?.state}. Explore village-level statistics including population data, connectivity and map details.`,
-    },
-  };
+  return { title, description, openGraph: { title, description } };
 }
 
+// ────────────────────────────────────────────────────────────
+// Page
+// ────────────────────────────────────────────────────────────
 export default async function VillagePage({ params }: Props) {
   const { state, district, tehsil, village } = await params;
 
-  const villagesData = await getVillages({
-    state_slug: state,
-    district_slug: district,
-    block_slug: tehsil,
-    village_slug: village,
-  });
+  const [villagesData, content] = await Promise.all([
+    getCachedVillage(state, district, tehsil, village),
+    getCachedContent(state, district, tehsil, village),
+  ]);
 
-  const content = await getContent("village", {
-    state_slug: state,
-    district_slug: district,
-    block_slug: tehsil,
-    village_slug: village,
-  });
+  if (!villagesData || villagesData?.status === 404) notFound();
 
-  if (!villagesData || villagesData?.status === 404) {
-    notFound();
-  }
+  const v = villagesData; // short alias to reduce repetition below
+
+  const breadcrumbData = [
+    { label: "Home", redirectionUrl: "/" },
+    { label: state, redirectionUrl: `/${state}` },
+    { label: district, redirectionUrl: `/${state}/${district}` },
+    { label: tehsil, redirectionUrl: `/${state}/${district}/${tehsil}` },
+    { label: v.village, redirectionUrl: null },
+  ];
+
+  const adminData = [
+    { label: "Village", value: v.village },
+    { label: "Tehsil", value: v.tehsil },
+    { label: "District", value: v.district },
+    { label: "State", value: v.state },
+    { label: "Country", value: v.country },
+    { label: "PIN Code", value: v.pin_code },
+    { label: "Total Area", value: v.total_area_sq_km },
+    { label: "Total Households", value: v.number_of_households },
+    { label: "Nearest Town", value: v.nearest_town },
+    { label: "Main Occupation", value: v.main_occupation },
+    { label: "Latitude / Longitude", value: `${v.latitude}, ${v.longitude}` },
+    { label: "Census Year", value: v.census_year },
+  ];
+
+  const overAllPopulation = [
+    { label: "Total", value: v.total_population },
+    { label: "Male", value: v.total_population_males },
+    { label: "Female", value: v.total_population_females },
+    { label: "Sex Ratio", value: v.sex_ratio_percent },
+  ];
+
+  const childrenPopulation = [
+    { label: "Total (0-6 Yrs)", value: v.population_0_6_years_total },
+    { label: "Male (0-6 Yrs)", value: v.population_0_6_years_males },
+    { label: "Female (0-6 Yrs)", value: v.population_0_6_years_females },
+  ];
+
+  const scStPopulation = [
+    {
+      label: "SC",
+      value: [
+        { label: "Total", value: v.scheduled_caste_population_total },
+        { label: "Male", value: v.scheduled_caste_population_males },
+        { label: "Female", value: v.scheduled_caste_population_females },
+        { label: "% Share", value: v.scheduled_caste_population_total_percent },
+      ],
+    },
+    {
+      label: "ST",
+      value: [
+        { label: "Total", value: v.scheduled_tribe_population_total },
+        { label: "Male", value: v.scheduled_tribe_population_males },
+        { label: "Female", value: v.scheduled_tribe_population_females },
+        { label: "% Share", value: v.scheduled_tribe_population_total_percent },
+      ],
+    },
+  ];
+
+  const literacyData = [
+    {
+      label: "Total Literates",
+      value: v.literates_total,
+      percent: v.literates_total_percent,
+    },
+    {
+      label: "Male Literates",
+      value: v.literates_males,
+      percent: v.literates_males_percent,
+    },
+    {
+      label: "Female Literates",
+      value: v.literates_females,
+      percent: v.literates_females_percent,
+    },
+  ];
+
+  const workerData = [
+    {
+      label: "Total Workers",
+      value: v.total_workers,
+      percent: v.total_workers_percent,
+    },
+    {
+      label: "Male Workers",
+      value: v.total_workers_males,
+      percent: v.total_workers_males_percent,
+    },
+    {
+      label: "Female Workers",
+      value: v.total_workers_females,
+      percent: v.total_workers_females_percent,
+    },
+  ];
+
+  const amenitiesData = [
+    { icon: "🎓", name: "Education", value: v.education_facilities },
+    { icon: "🏥", name: "Medical", value: v.medical_facilities },
+    { icon: "💧", name: "Drinking Water", value: v.drinking_water_facilities },
+    { icon: "🏦", name: "Bank", value: v.bank_facilities },
+  ];
 
   return (
     <main className="flex w-full md:max-w-275 m-auto p-4 flex-wrap">
-      <div className="flex w-full text-sm gap-1 mb-4 capitalize">
-        <Link href="/" className="text-indigo-600">
-          Home
-        </Link>{" "}
-        ›{" "}
-        <Link href={`/${state}`} className="text-indigo-600">
-          {state}
-        </Link>{" "}
-        ›{" "}
-        <Link href={`/${state}/${district}`} className="text-indigo-600">
-          {district} district
-        </Link>{" "}
-        ›{" "}
-        <Link
-          href={`/${state}/${district}/${tehsil}`}
-          className="text-indigo-600"
-        >
-          {tehsil} tehsil
-        </Link>{" "}
-        › {villagesData?.village_name}
-      </div>
+      <Breadcrumb data={breadcrumbData} />
+
       <div className="flex w-full flex-col border gap-4 border-gray-200 rounded-2xl bg-linear-to-b from-slate-50 to-white p-4.5 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
         <div className="flex w-full flex-wrap gap-4 md:flex-nowrap">
           <div className="flex w-full md:w-2/3 flex-col gap-4">
             <h1 className="text-lg md:text-2xl font-bold">
-              {villagesData?.village_name} Village, {villagesData?.district},{" "}
-              {villagesData?.state} – Population, Census, Map & Connectivity
+              {v.village} Village Population, Sex Ratio & Literacy Rate
             </h1>
+
             {content.top_content ? (
               <HtmlContent
                 type="top"
@@ -170,521 +253,88 @@ export default async function VillagePage({ params }: Props) {
                 customClass="mb-0"
               />
             ) : (
-              <p className="text-slate-700 text-sm">
-                {villagesData?.village_name} is a village located in{" "}
-                {villagesData?.block_tehsil} block of {villagesData?.district}{" "}
-                district in {villagesData?.state}, India.
-              </p>
+              <>
+                <p className="text-slate-700 text-sm">
+                  {v.village} is a village in {v.tehsil} tehsil, {v.district}{" "}
+                  district, {v.state}, {v.country}. As per Census{" "}
+                  {v.census_year}, the total population is {v.total_population},
+                  sex ratio is {v.sex_ratio_percent} females per 1,000 males,
+                  and the overall literacy rate is {v.literates_total_percent}%.
+                  The PIN code of {v.village} is {v.pin_code}.
+                </p>
+                <p className="text-slate-700 text-sm p-2 border border-gray-200 rounded-md bg-gray-100">
+                  ℹ️ Source: Office of the Registrar General &amp; Census
+                  Commissioner, India — Census {v.census_year}
+                </p>
+              </>
             )}
+          </div>
 
-            <div className="flex w-full justify-between gap-4">
-              <div className="flex w-full md:w-1/3 px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold">
-                PinCode : {villagesData?.pin_code}
-              </div>
-              <div className="flex w-full md:w-1/3 px-3 py-2 border border-gray-200 rounded-xl text-xs font-bold">
-                Internet :{villagesData?.internet}
-              </div>
-              <div className="flex w-full md:w-1/3 px-3 py-2 border border-gray-200 rounded-xl text-xs font-bold">
-                Mobile : {villagesData?.mobile_networks}
-              </div>
-            </div>
-          </div>
-          <div className="flex w-full md:w-1/3 flex-col gap-1 border border-gray-200 rounded-xl bg-linear-to-b from-slate-50 to-white p-4.5 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-            <p className="text-xs text-slate-500">Quick Facts</p>
-            <p className="text-sm text-slate-950 font-bold">
-              {villagesData?.village_name}
-            </p>
-            <p className="text-sm text-slate-500">
-              Block: <strong>{villagesData?.block_tehsil}</strong>
-            </p>
-            <p className="text-sm text-slate-500">
-              District: <strong>{villagesData?.district}</strong>
-            </p>
-            <p className="text-sm text-slate-500">
-              State: <strong>{villagesData?.state}</strong>
-            </p>
-            <p className="text-sm text-slate-500">
-              Gram Panchayat: <strong>{villagesData?.gram_panchayat}</strong>
-            </p>
-          </div>
+          <TopLeft
+            title="Village at a Glance"
+            subHeading={v.village}
+            data={[
+              { label: "Tehsil", value: v.tehsil },
+              { label: "District", value: v.district },
+              { label: "State", value: v.state },
+              { label: "PIN Code", value: v.pin_code },
+              { label: "Nearest Town", value: v.nearest_town },
+              { label: "Main Occupation", value: v.main_occupation },
+              { label: "Census Year", value: v.census_year },
+            ]}
+          />
         </div>
+
         <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
-          <div className="flex w-full md:w-1/3 gap-1 flex-col border border-gray-200 rounded-xl bg-linear-to-b from-slate-50 to-white p-3 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-            <p className="text-xs text-slate-500">
-              Population (Census {villagesData?.census_year})
-            </p>
-            <p className="text-sm text-slate-950 font-bold">
-              {villagesData?.total_population}
-            </p>
-          </div>
-          <div className="flex w-full md:w-1/3 gap-1 flex-col border border-gray-200 rounded-xl bg-linear-to-b from-slate-50 to-white p-3 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-            <p className="text-xs text-slate-500">Avg Literacy Rate</p>
-            <p className="text-sm text-slate-950 font-bold">
-              {villagesData?.avg_literacy_rate}%
-            </p>
-          </div>
-          <div className="flex w-full md:w-1/3 gap-1 flex-col border border-gray-200 rounded-xl bg-linear-to-b from-slate-50 to-white p-3 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-            <p className="text-xs text-slate-500">Nearest Town</p>
-            <p className="text-sm text-slate-950 font-bold">
-              {villagesData?.nearest_town}
-            </p>
-          </div>
+          <TopChip heading="Total Population" value={v.total_population} />
+          <TopChip
+            heading="Sex Ratio"
+            value={v.sex_ratio_percent}
+            isShowPercent
+          />
+          <TopChip
+            heading="Literacy Rate"
+            value={v.literates_total_percent}
+            isShowPercent
+          />
+          <TopChip heading="Households" value={v.number_of_households} />
+          <TopChip heading="Area" value={v.total_area_sq_km} />
         </div>
       </div>
 
-      {/* Overview */}
-      <div className="flex w-full mt-8 flex-col">
-        <h2 className="text-lg md:text-2xl mb-3 pl-3 border-l-[5px] border-l-blue-600 font-bold">
-          Overview of {villagesData?.village_name} Village
-        </h2>
-        <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
-          <div className="flex w-full flex-col gap-4 md:flex-row">
-            <div className="flex w-full md:w-1/2 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <table className="w-full text-left">
-                <tbody>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Village ID
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.village_id}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Village Name
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.village_name}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Block / Tehsil
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.block_tehsil}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      District
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.district}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      State
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.state}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Country
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.country}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div className="flex w-full md:w-1/2 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <table className="w-full text-left">
-                <tbody>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Road Quality
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.roads}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Water Source
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.drinking_water}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Electricity
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.electricity}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Nearest City
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.nearest_city}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Distance to Town (km)
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.distance_to_town_km}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+      <div className="flex w-full gap-4 mt-4 flex-wrap md:flex-nowrap">
+        <div className="w-full md:w-2/3">
+          <Map
+            heading={v.village}
+            lat={v.latitude}
+            long={v.longitude}
+            nearest_town={v.nearest_town}
+          />
+          <Administrative heading={v.village} data={adminData} />
+          <Amenities heading={v.village} data={amenitiesData} />
+          <Population
+            heading={v.village}
+            year={v.census_year}
+            overAllPopulation={overAllPopulation}
+            childrenPopulation={childrenPopulation}
+            scStPopulation={scStPopulation}
+          />
+          <Literacy heading={v.village} data={literacyData} />
+          <Workers heading={v.village} data={workerData} />
+        </div>
+
+        <div className="w-full md:w-1/3 flex flex-col gap-4">
+          <About type="village" name={v.village} />
+          {/* TODO: Replace with real API data */}
+          <PopularList heading="Explore Other Villages" listData={[]} />
+          <PopularList heading={`Go to ${v.village}`} listData={[]} />
         </div>
       </div>
 
-      {/* Location & Map */}
-      <div className="flex w-full mt-8 flex-col">
-        <h2 className="text-lg md:text-2xl mb-3 pl-3 border-l-[5px] border-l-blue-600 font-bold">
-          Location of {villagesData?.village_name} Village & Google Map
-        </h2>
-        <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
-          <div className="flex w-full flex-col gap-4 md:flex-row">
-            <div className="flex w-full md:w-1/2 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <table className="w-full text-left">
-                <tbody>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Latitude
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.latitude}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Longitude
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.longitude}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Nearest Town
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.nearest_town}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      PIN Code
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.pin_code}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Police Station
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.police_station}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Gram Panchayat
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.gram_panchayat}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div className="flex w-full md:w-1/2 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <iframe
-                title={villagesData?.village_name}
-                loading="lazy"
-                width="100%"
-                height="100%"
-                src={`https://www.google.com/maps?q=${villagesData?.latitude},${villagesData?.longitude}&output=embed`}
-              ></iframe>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* How to Reach */}
-      <div className="flex w-full mt-8 flex-col">
-        <h2 className="text-lg md:text-2xl mb-3 pl-3 border-l-[5px] border-l-blue-600 font-bold">
-          How to Reach {villagesData?.village_name} Village
-        </h2>
-        <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
-          <div className="flex w-full flex-col gap-4 md:flex-row">
-            <div className="flex w-full flex-col md:w-1/3 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <p className="font-semibold">Road Connectivity</p>
-              <p className="text-sm">{villagesData?.road_connectivity}</p>
-            </div>
-            <div className="flex w-full flex-col md:w-1/3 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <p className="font-semibold">Nearest Railway Station</p>
-              <p className="text-sm">{villagesData?.nearest_railway_station}</p>
-            </div>
-            <div className="flex w-full flex-col md:w-1/3 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <p className="font-semibold">Nearest Airport</p>
-              <p className="text-sm">{villagesData?.nearest_airport}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Population */}
-      <div className="flex w-full mt-8 flex-col">
-        <h2 className="text-lg md:text-2xl mb-3 pl-3 border-l-[5px] border-l-blue-600 font-bold">
-          Population of {villagesData?.district} Tehsil (Census{" "}
-          {villagesData?.census_year})
-        </h2>
-        <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
-          <div className="flex w-full flex-col gap-4 md:flex-row">
-            <div className="flex w-full border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <table className="w-full text-left">
-                <tbody>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Total Population
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.total_population}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Male Population
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.male_population}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Female Population
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.female_population}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Child Population (0–6)
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.child_population_0_6}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Sex Ratio
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.sex_ratio}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      SC Population
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.sc_population}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      ST Population
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.st_population}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Total Households
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.total_households}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Literacy */}
-      <div className="flex w-full mt-8 flex-col">
-        <h2 className="text-lg md:text-2xl mb-3 pl-3 border-l-[5px] border-l-blue-600 font-bold">
-          Literacy of {villagesData?.village_name}
-        </h2>
-        <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
-          <div className="flex w-full flex-col gap-4 md:flex-row">
-            <div className="flex w-full md:w-1/2 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <table className="w-full text-left">
-                <tbody>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Overall Literacy (%)
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.avg_literacy_rate}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Male Literacy (%)
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.male_literacy_rate}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Female Literacy (%)
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.female_literacy_rate}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div className="flex w-full md:w-1/2 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <table className="w-full text-left">
-                <tbody>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Dominant Religion
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.major_religions}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Major Festivals
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.festivals}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Terrain / Geography
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.terrain_geography}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Climate / Weather
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {villagesData?.climate_weather}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Facilities */}
-      <div className="flex w-full mt-8 flex-col">
-        <h2 className="text-lg md:text-2xl mb-3 pl-3 border-l-[5px] border-l-blue-600 font-bold">
-          Facilities & Development in {villagesData?.village_name}
-        </h2>
-        <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
-          <div className="flex w-full flex-col gap-4 md:flex-row">
-            <div className="flex w-full flex-col md:w-1/3 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <p>Economy & Occupation</p>
-              <ul className="w-full mt-4 text-sm text-slate-700 list-disc list-inside">
-                <li>
-                  <strong>Main Occupation:</strong>{" "}
-                  {villagesData?.main_occupation}
-                </li>
-                <li>
-                  <strong>Major Crops:</strong> {villagesData?.major_crops}
-                </li>
-              </ul>
-            </div>
-            <div className="flex w-full flex-col md:w-1/3 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <p>Infrastructure</p>
-              <ul className="w-full mt-4 text-sm text-slate-700 list-disc list-inside">
-                <li>
-                  <strong>Sanitation:</strong> {villagesData?.sanitation}
-                </li>
-                <li>
-                  <strong>Roads:</strong> {villagesData?.roads}
-                </li>
-                <li>
-                  <strong>Internet:</strong> {villagesData?.internet}
-                </li>
-                <li>
-                  <strong>Mobile Networks:</strong>{" "}
-                  {villagesData?.mobile_networks}
-                </li>
-              </ul>
-            </div>
-            <div className="flex w-full flex-col md:w-1/3 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <p>Education</p>
-              <ul className="w-full mt-4 text-sm text-slate-700 list-disc list-inside">
-                <li>
-                  <strong>Primary School:</strong>{" "}
-                  {villagesData?.primary_school}
-                </li>
-                <li>
-                  <strong>Secondary School:</strong>{" "}
-                  {villagesData?.secondary_school}
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {content?.blog_content && (
-        <BlogSection blogData={content?.blog_content} />
-      )}
-      {content.bottom_content && (
+      {content?.blog_content && <BlogSection blogData={content.blog_content} />}
+      {content?.bottom_content && (
         <HtmlContent type="bottom" content={content.bottom_content} />
       )}
-
-      {/* <WeatherWidget latitude={28.5235} longitude={77.4057} /> */}
-
-      {/* Explore more links */}
-      <div className="flex flex-wrap items-center mt-8 text-sm gap-2 w-full border border-gray-200 rounded-lg p-4 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-        Explore more:{" "}
-        <Link
-          href={`/${villagesData?.state_slug}/${villagesData?.district_slug}/${villagesData?.block_slug}/`}
-          className="text-blue-600"
-        >
-          Villages in {villagesData?.block_tehsil} Tehsil
-        </Link>{" "}
-        <span className="w-1 h-1 bg-black rounded-full"></span>
-        <Link
-          href={`/${villagesData?.state_slug}/${villagesData?.district_slug}`}
-          className="text-blue-600"
-        >
-          Villages in {villagesData?.district} district
-        </Link>
-        <span className="w-1 h-1 bg-black rounded-full"></span>
-        <Link href={`/${villagesData?.state_slug}`} className="text-blue-600">
-          Villages in {villagesData?.state} state
-        </Link>
-      </div>
     </main>
   );
 }

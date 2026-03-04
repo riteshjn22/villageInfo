@@ -10,14 +10,14 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const state_slug = searchParams.get("state_slug");
     const district_slug = searchParams.get("district_slug");
-    const block_slug = searchParams.get("block_slug");
+    const tehsil_slug = searchParams.get("block_slug");
 
     // Case 1: Both state_slug AND district_slug provided → return single district details
-    if (state_slug && district_slug && block_slug) {
+    if (state_slug && district_slug && tehsil_slug) {
       const tehsil = await Tehsil.findOne({
         state_slug,
         district_slug,
-        block_slug,
+        tehsil_slug,
       }).lean();
 
       if (!tehsil) {
@@ -35,7 +35,7 @@ export async function GET(req) {
       const tehsils = await Tehsil.find({ state_slug, district_slug })
         .sort({ block_tehsil: 1 })
         .select(
-          "block_tehsil block_slug total_population total_tehsils state_slug district_slug",
+          "tehsil tehsil_slug total_population total_tehsils state_slug district_slug total_villages sex_ratio_percent literates_total_percent",
         )
         .lean();
 
@@ -81,8 +81,8 @@ export async function POST(req) {
     });
 
     const tehsil = await Tehsil.findOneAndUpdate(
-      { block_id: body.block_id },
-      body, // Direct update without $set works when upsert is true
+      { tehsil_id: body.tehsil_id },
+      { $set: body }, // Direct update without $set works when upsert is true
       {
         returnDocument: "after", // Return updated doc
         upsert: true, // Create if not exists
@@ -92,7 +92,7 @@ export async function POST(req) {
     );
 
     // ✅ Clear cache after successful update
-    revalidateTag("tehsils");
+    revalidateTag("tehsils", "max");
 
     return NextResponse.json(tehsil, { status: 201 });
   } catch (error) {

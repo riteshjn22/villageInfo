@@ -6,7 +6,6 @@ import { getVillages } from "@/utils/common";
 export async function GET() {
   const data = await getVillages(); // returns { totalVillages: 100 }
   const totalPages = Math.ceil(data?.totalVillages / SITE_MAP_PER_PAGE);
-  console.log(totalPages, "totalPages", data?.totalVillages)
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

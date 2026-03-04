@@ -1,71 +1,267 @@
 import { getContent, getDistricts, getStates } from "@/utils/common";
-import Link from "next/link";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import HtmlContent from "@/components/htmlContent";
 import BlogSection from "@/components/BlogSection";
+import TopLeft from "@/components/TopLeft";
+import TopChip from "@/components/TopChip";
+import Administrative from "@/components/Administrative";
+import Population from "@/components/Population";
+import Religion from "@/components/Religion";
+import Literacy from "@/components/Literacy";
+import Workers from "@/components/Workers";
+import List from "@/components/List";
+import Breadcrumb from "@/components/Breadcrumb";
+import About from "@/components/About";
+import PopularList from "@/components/PopularList";
+import StateSchema from "@/components/Stateschema";
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 type Props = {
-  params: Promise<{
-    state: string;
-  }>;
+  params: Promise<{ state: string }>;
 };
+
+type District = {
+  _id: string;
+  district: string;
+  district_slug: string;
+  state_slug: string;
+  total_tehsils: number;
+  total_population: number;
+  sex_ratio_percent: number;
+  literates_total_percent: number;
+};
+
+// ─── Metadata ────────────────────────────────────────────────────────────────
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state } = await params;
+
   const [content, stateData] = await Promise.all([
     getContent("state", { state_slug: state }),
     getStates({ state_slug: state }),
   ]);
 
-  const defaultTitle = `${stateData?.state} - Districts, Tehsils, Villages, Population and Census`;
-  const defaultDescription = `${stateData?.state} is a state in India. This page provides state-level statistics including total districts, tehsils, villages, population data and literacy rates.`;
-
   const title =
-    !content?.error && content?.title ? content.title : defaultTitle;
+    content?.title && !content?.error ? content.title : stateData?.seo_title;
   const description =
-    !content?.error && content?.description
+    content?.description && !content?.error
       ? content.description
-      : defaultDescription;
+      : stateData?.seo_description;
 
   return {
     title,
     description,
-    openGraph: {
-      title,
-      description:
-        !content?.error && content?.description
-          ? content.description
-          : `${stateData?.state} is a state in India. Explore districts, tehsils, villages, population and census data.`,
-    },
+    openGraph: { title, description },
   };
 }
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default async function StatePage({ params }: Props) {
   const { state } = await params;
-  const content = await getContent("state", { state_slug: state });
-  const stateData = await getStates({ state_slug: state });
-  const districts = await getDistricts({ state_slug: state });
 
-  // Show 404 if state not found
-  if (!stateData || stateData?.status === 404) {
-    notFound();
-  }
+  const [
+    content,
+    stateData,
+    districts,
+    allStates,
+    topPopDistricts,
+    topLitDistricts,
+  ] = await Promise.all([
+    getContent("state", { state_slug: state }),
+    getStates({ state_slug: state }),
+    getDistricts({ state_slug: state }) as Promise<District[]>,
+    getStates({ limit: 5 }),
+    getDistricts({ state_slug: state, limit: 5, sortBy: "population" }),
+    getDistricts({ state_slug: state, limit: 5, sortBy: "literate" }),
+  ]);
+
+  if (!stateData || stateData?.status === 404) notFound();
+
+  // ─── Data Shapes ───────────────────────────────────────────────────────────
+
+  const adminData = [
+    { label: "State", value: stateData.state },
+    { label: "Country", value: stateData.country },
+    { label: "Capital", value: stateData.capital },
+    { label: "High Court", value: stateData.high_court },
+    { label: "Total Area", value: stateData.total_area_sq_km },
+    { label: "Total Districts", value: stateData.total_districts },
+    { label: "Total Tehsils", value: stateData.total_tehsils },
+    { label: "Total Villages", value: stateData.total_villages },
+    { label: "Total Households", value: stateData.number_of_households },
+    { label: "Census Year", value: stateData.census_year },
+  ];
+
+  const overAllPopulation = [
+    { label: "Total", value: stateData.total_population },
+    { label: "Male", value: stateData.total_population_males },
+    { label: "Female", value: stateData.total_population_females },
+    { label: "Sex Ratio", value: stateData.sex_ratio_percent },
+  ];
+
+  const childrenPopulation = [
+    { label: "Total (0-6 Yrs)", value: stateData.population_0_6_years_total },
+    { label: "Male (0-6 Yrs)", value: stateData.population_0_6_years_males },
+    {
+      label: "Female (0-6 Yrs)",
+      value: stateData.population_0_6_years_females,
+    },
+  ];
+
+  const scStPopulation = [
+    {
+      label: "SC",
+      value: [
+        { label: "Total", value: stateData.scheduled_caste_population_total },
+        { label: "Male", value: stateData.scheduled_caste_population_males },
+        {
+          label: "Female",
+          value: stateData.scheduled_caste_population_females,
+        },
+        {
+          label: "% Share",
+          value: stateData.scheduled_caste_population_total_percent,
+        },
+      ],
+    },
+    {
+      label: "ST",
+      value: [
+        { label: "Total", value: stateData.scheduled_tribe_population_total },
+        { label: "Male", value: stateData.scheduled_tribe_population_males },
+        {
+          label: "Female",
+          value: stateData.scheduled_tribe_population_females,
+        },
+        {
+          label: "% Share",
+          value: stateData.scheduled_tribe_population_total_percent,
+        },
+      ],
+    },
+  ];
+
+  const religionData = [
+    {
+      label: "Hindu",
+      value: stateData.hindu_population,
+      percent: stateData.hindu_population_percent,
+    },
+    {
+      label: "Muslim",
+      value: stateData.muslim_population,
+      percent: stateData.muslim_population_percent,
+    },
+    {
+      label: "Sikh",
+      value: stateData.sikh_population,
+      percent: stateData.sikh_population_percent,
+    },
+    {
+      label: "Christian",
+      value: stateData.christian_population,
+      percent: stateData.christian_population_percent,
+    },
+    {
+      label: "Jain",
+      value: stateData.jain_population,
+      percent: stateData.jain_population_percent,
+    },
+    {
+      label: "Buddhist",
+      value: stateData.buddhist_population,
+      percent: stateData.Buddhist_population_percent,
+    },
+  ];
+
+  const literacyData = [
+    {
+      label: "Total Literates",
+      value: stateData.literates_total,
+      percent: stateData.literates_total_percent,
+    },
+    {
+      label: "Male Literates",
+      value: stateData.literates_males,
+      percent: stateData.literates_males_percent,
+    },
+    {
+      label: "Female Literates",
+      value: stateData.literates_females,
+      percent: stateData.literates_females_percent,
+    },
+  ];
+
+  const workerData = [
+    {
+      label: "Total Workers",
+      value: stateData.total_workers,
+      percent: stateData.total_workers_percent,
+    },
+    {
+      label: "Male Workers",
+      value: stateData.total_workers_males,
+      percent: stateData.total_workers_males_percent,
+    },
+    {
+      label: "Female Workers",
+      value: stateData.total_workers_females,
+      percent: stateData.total_workers_females_percent,
+    },
+  ];
+
+  const districtData = districts?.map((item) => ({
+    name: item.district,
+    population: item.total_population,
+    total: item.total_tehsils,
+    sex_ratio: item?.sex_ratio_percent,
+    literacy_rate: item?.literates_total_percent,
+    district_slug: item?.district_slug,
+    state_slug: item?.state_slug,
+  }));
+
+  const { state: stateName, census_year } = stateData;
+
+  const breadcrumbData = [
+    { label: "Home", redirectionUrl: "/" },
+    { label: stateName, redirectionUrl: null },
+  ];
+
+  const topStates = [
+    ...(allStates ?? []).map((item: { state: string; state_slug: string }) => ({
+      name: item.state,
+      redirectionUrl: item.state_slug,
+    })),
+    { name: "View All States", redirectionUrl: "/" },
+  ];
+
+  // Replace the hardcoded topPopulatedDistricts with real data
+  const topPopulatedDistricts = [
+    ...(topPopDistricts ?? []).map((item: District) => ({
+      name: item.district,
+      redirectionUrl: `/${item.state_slug}/${item.district_slug}`,
+    })),
+  ];
+
+  const topLiterateDistricts = [
+    ...(topLitDistricts ?? []).map((item: District) => ({
+      name: item.district,
+      redirectionUrl: `/${item.state_slug}/${item.district_slug}`,
+    })),
+  ];
+  // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
     <main className="flex w-full md:max-w-275 m-auto p-4 flex-wrap">
-      <div className="flex w-full text-sm gap-1 mb-4 capitalize">
-        <Link href="/" className="text-indigo-600">
-          Home
-        </Link>{" "}
-        › {stateData?.state}
-      </div>
+      <Breadcrumb data={breadcrumbData} />
       <div className="flex w-full flex-col border gap-4 border-gray-200 rounded-2xl bg-linear-to-b from-slate-50 to-white p-4.5 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
         <div className="flex w-full flex-wrap gap-4 md:flex-nowrap">
           <div className="flex w-full md:w-2/3 flex-col gap-4">
             <h1 className="text-lg md:text-2xl font-bold">
-              {stateData?.state} - Districts, Tehsils, Villages, Population and
-              Census
+              {stateName} - Districts, Tehsils, Villages, Population and Census
             </h1>
 
             {content.top_content ? (
@@ -75,296 +271,96 @@ export default async function StatePage({ params }: Props) {
                 customClass="mb-0"
               />
             ) : (
-              <p className="text-slate-700 text-sm">
-                {stateData?.state} is a state in India. This page provides
-                state-level statistics including total districts, tehsils,
-                villages, population data and literacy rates.
-              </p>
+              <>
+                <p className="text-slate-700 text-sm">
+                  {stateName} is a state in {stateData.country} with{" "}
+                  {stateData.total_districts} districts,{" "}
+                  {stateData.total_tehsils} tehsils and{" "}
+                  {stateData.total_villages} villages. As per Census{" "}
+                  {census_year}, the total population is{" "}
+                  {stateData.total_population}, sex ratio is{" "}
+                  {stateData.sex_ratio_percent} females per 1,000 males, and the
+                  overall literacy rate is{" "}
+                  {parseFloat(stateData.literates_total_percent).toFixed(2)}%.
+                </p>
+                <p className="text-slate-700 text-sm p-2 border border-gray-200 rounded-md bg-gray-100">
+                  ℹ️ Source: Office of the Registrar General & Census
+                  Commissioner, India — Census {census_year}
+                </p>
+              </>
             )}
           </div>
-          <div className="flex w-full md:w-1/3 flex-col gap-1 border border-gray-200 rounded-xl bg-linear-to-b from-slate-50 to-white p-4.5 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-            <p className="text-xs text-slate-500">State Snapshot</p>
-            <p className="text-sm text-slate-950 font-bold">
-              {stateData?.state}
-            </p>
-            <p className="text-sm text-slate-500">
-              Country: <strong>{stateData?.country}</strong>
-            </p>
-            <p className="text-sm text-slate-500">
-              Census Year: <strong>{stateData?.census_year}</strong>
-            </p>
-            <p className="text-sm text-slate-500">
-              Districts: <strong>{stateData?.total_districts}</strong>
-            </p>
-          </div>
-        </div>
-        <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
-          <div className="flex w-full md:w-1/3 gap-1 flex-col border border-gray-200 rounded-xl bg-linear-to-b from-slate-50 to-white p-3 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-            <p className="text-xs text-slate-500">Total Villages</p>
-            <p className="text-sm text-slate-950 font-bold">
-              {stateData?.total_villages}
-            </p>
-          </div>
-          <div className="flex w-full md:w-1/3 gap-1 flex-col border border-gray-200 rounded-xl bg-linear-to-b from-slate-50 to-white p-3 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-            <p className="text-xs text-slate-500">Population</p>
-            <p className="text-sm text-slate-950 font-bold">
-              {stateData?.total_population}
-            </p>
-          </div>
-          <div className="flex w-full md:w-1/3 gap-1 flex-col border border-gray-200 rounded-xl bg-linear-to-b from-slate-50 to-white p-3 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-            <p className="text-xs text-slate-500">Avg Literacy Rate</p>
-            <p className="text-sm text-slate-950 font-bold">
-              {stateData?.avg_literacy_rate}%
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className="flex w-full mt-8 flex-col">
-        <h2 className="text-lg md:text-2xl mb-3 pl-3 border-l-[5px] border-l-blue-600 font-bold">
-          Overview of {stateData?.state}
-        </h2>
-        <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
-          <div className="flex w-full md:w-2/3 flex-col gap-4 md:flex-row">
-            <div className="flex w-full md:w-1/2 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <table className="w-full text-left">
-                <tbody>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      State ID
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {stateData?.state_id}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      State
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {stateData?.state}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Country
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {stateData?.country}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Total Districts
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {stateData?.total_districts}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Total Tehsils
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {stateData?.total_tehsils}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Total Villages
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {stateData?.total_villages}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div className="flex w-full md:w-1/2 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              hello
-            </div>
-          </div>
-          <div className="flex w-full flex-col md:w-1/3 border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-            <h3 className="flex w-full font-bold text-slate-950 mb-4">
-              Quick Facts
-            </h3>
-            <table className="w-full text-left">
-              <tbody>
-                <tr>
-                  <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                    State
-                  </td>
-                  <td className="p-3 text-sm border-b border-gray-200">
-                    {stateData?.state}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                    Districts
-                  </td>
-                  <td className="p-3 text-sm border-b border-gray-200">
-                    {stateData?.total_districts}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                    Tehsils
-                  </td>
-                  <td className="p-3 text-sm border-b border-gray-200">
-                    {stateData?.total_tehsils}
-                  </td>
-                </tr>
 
-                <tr>
-                  <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                    Villages
-                  </td>
-                  <td className="p-3 text-sm border-b border-gray-200">
-                    {stateData?.total_villages}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                    Population
-                  </td>
-                  <td className="p-3 text-sm border-b border-gray-200">
-                    {stateData?.total_population}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <TopLeft
+            title="State at a Glance"
+            subHeading={stateName}
+            data={[
+              { label: "Capital", value: stateData.capital },
+              { label: "High Court", value: stateData.high_court },
+              { label: "Area", value: `${stateData.total_area_sq_km} sq km` },
+              { label: "State Code", value: stateData.state_id },
+              { label: "Census Year", value: census_year },
+            ]}
+          />
         </div>
-      </div>
-      <div className="flex w-full mt-8 flex-col">
-        <h2 className="text-lg md:text-2xl mb-3 pl-3 border-l-[5px] border-l-blue-600 font-bold">
-          Population of {stateData?.state} (Census {stateData?.census_year})
-        </h2>
+
         <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
-          <div className="flex w-full md:w-2/3 flex-col gap-4 md:flex-row">
-            <div className="flex w-full border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <table className="w-full text-left">
-                <tbody>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Total Population
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {stateData?.total_population}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Male Population
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {stateData?.male_population}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Female Population
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {stateData?.female_population}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      SC Population
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {stateData?.sc_population}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      ST Population
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {stateData?.st_population}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-medium p-3 text-sm bg-slate-50 w-[48%] border-b border-gray-200">
-                      Total Households
-                    </td>
-                    <td className="p-3 text-sm border-b border-gray-200">
-                      {stateData?.total_households}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <TopChip
+            heading="Total Population"
+            value={stateData.total_population}
+          />
+          <TopChip
+            heading="Sex Ratio"
+            value={stateData.sex_ratio_percent}
+            isShowPercent
+          />
+          <TopChip
+            heading="Literacy Rate"
+            value={stateData.literates_total_percent}
+            isShowPercent
+          />
+          <TopChip heading="Districts" value={stateData.total_districts} />
+          <TopChip heading="Villages" value={stateData.total_villages} />
+          <TopChip
+            heading="Households"
+            value={stateData.number_of_households}
+          />
         </div>
       </div>
-      {/**total Districts */}
-      <div className="flex w-full mt-8 flex-col">
-        <h2 className="text-lg md:text-2xl mb-3 pl-3 border-l-[5px] border-l-blue-600 font-bold">
-          Districts in {stateData?.state}
-        </h2>
-        <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
-          <div className="flex w-full md:w-2/3 flex-col gap-4 md:flex-row">
-            <div className="flex w-full border border-gray-200 rounded-lg p-2 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <table className="w-full text-left">
-                <tbody>
-                  <tr>
-                    <th className="font-medium p-3 text-sm bg-slate-50 w-1/3 border-b border-gray-200">
-                      District Name
-                    </th>
-                    <th className="font-medium p-3 text-sm bg-slate-50 w-1/3 border-b border-gray-200">
-                      Population
-                    </th>
-                    <th className="font-medium p-3 text-sm bg-slate-50 w-1/3 border-b border-gray-200">
-                      Total Tehsils
-                    </th>
-                  </tr>
-                  {districts?.map(
-                    (district: {
-                      _id: string;
-                      district: string;
-                      district_slug: string;
-                      total_population: number | string;
-                      total_tehsils: number | string;
-                    }) => (
-                      <tr key={district._id}>
-                        <td className="p-3 text-sm border-b border-gray-200">
-                          <Link
-                            href={`/${stateData?.state_slug}/${district.district_slug}`}
-                            className="text-blue-600"
-                          >
-                            {district.district}
-                          </Link>
-                        </td>
-                        <td className="p-3 text-sm border-b border-gray-200">
-                          {district.total_population}
-                        </td>
-                        <td className="p-3 text-sm border-b border-gray-200">
-                          {district.total_tehsils}
-                        </td>
-                      </tr>
-                    ),
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+      <div className="flex w-full gap-4 mt-4 flex-wrap md:flex-nowrap">
+        <div className="w-full md:w-2/3">
+          <Administrative heading={stateName} data={adminData} />
+          <Population
+            heading={stateName}
+            year={census_year}
+            overAllPopulation={overAllPopulation}
+            childrenPopulation={childrenPopulation}
+            scStPopulation={scStPopulation}
+          />
+          <Religion heading={stateName} religionData={religionData} />
+          <Literacy heading={stateName} data={literacyData} />
+          <Workers heading={stateName} data={workerData} />
+          <List type="state" heading={stateName} data={districtData} />
+        </div>
+        <div className="w-full md:w-1/3 flex flex-col gap-4">
+          <About type="state" name={stateName} />
+          <PopularList
+            heading={`Top Populated ${stateName} Districts`}
+            listData={topPopulatedDistricts}
+          />
+          <PopularList
+            heading={`Top Literate ${stateName} Districts`}
+            listData={topLiterateDistricts}
+          />
+          <PopularList heading={`Explore Other States`} listData={topStates} />
         </div>
       </div>
-      {content?.blog_content && (
-        <BlogSection blogData={content?.blog_content} />
-      )}
-      {content.bottom_content && (
+
+      {content?.blog_content && <BlogSection blogData={content.blog_content} />}
+      {content?.bottom_content && (
         <HtmlContent type="bottom" content={content.bottom_content} />
       )}
-
-      {/** all state link */}
-      <div className="flex flex-wrap mt-8 text-sm gap-2 w-full border border-gray-200 rounded-lg p-4 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-        Explore more:{" "}
-        <Link href="/" className="text-blue-600">
-          All States of India
-        </Link>
-      </div>
+      <StateSchema s={stateData} districts={districts} />
     </main>
   );
 }

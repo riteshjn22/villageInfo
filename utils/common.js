@@ -194,7 +194,7 @@ export async function saveContent(page_id, data = {}, params = {}) {
     const slugs = {
       ...(params.state_slug && { state_slug: params.state_slug }),
       ...(params.district_slug && { district_slug: params.district_slug }),
-      ...(params.block_slug && { block_slug: params.block_slug }),
+      ...(params.tehsil_slug && { tehsil_slug: params.tehsil_slug }),
       ...(params.village_slug && { village_slug: params.village_slug }),
     };
 
