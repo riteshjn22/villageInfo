@@ -386,7 +386,7 @@ export default async function VillagePage({ params }: Props) {
             <Workers heading={v.village} data={workerData} />
           </div>
 
-          <div className="w-full md:w-1/3 flex flex-col gap-4">
+          <div className="w-full md:w-1/3 flex flex-col gap-4  sticky top-18 self-start">
             <About type="village" name={v.village} />
             {tehsilVillages?.length > 0 && (
               <PopularList

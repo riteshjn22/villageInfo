@@ -46,7 +46,7 @@ export default function List({ type, heading, data }: Props) {
         <span className="md:flex hidden h-px bg-[#e2e8f0] w-full" />
       </div>
 
-      <div className="w-full flex border border-gray-200 overflow-hidden rounded-lg">
+      <div className="w-full flex border border-gray-200 overflow-auto md:overflow-hidden rounded-lg">
         <table className="w-full">
           <thead>
             <tr className="bg-[#f8fafc] uppercase text-left">
@@ -64,6 +64,7 @@ export default function List({ type, heading, data }: Props) {
                 <TD>{index + 1}</TD>
                 <TD>
                   <Link
+                    className="text-[#2563eb]"
                     href={`/${[item?.state_slug, item?.district_slug, item?.tehsil_slug, item?.village_slug].filter(Boolean).join("/")}`}
                   >
                     {item.name}

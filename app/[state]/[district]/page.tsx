@@ -419,7 +419,7 @@ export default async function DistrictPage({ params }: Props) {
             <List type="district" heading={districtName} data={tehsilData} />
           </div>
 
-          <div className="w-full md:w-1/3 flex flex-col gap-4">
+          <div className="w-full md:w-1/3 flex flex-col gap-4  sticky top-18 self-start">
             <About type="district" name={districtName} />
             {topPopulatedTehsils?.length > 0 && (
               <PopularList

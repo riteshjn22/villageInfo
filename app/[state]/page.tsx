@@ -345,7 +345,7 @@ export default async function StatePage({ params }: Props) {
           <Workers heading={stateName} data={workerData} />
           <List type="state" heading={stateName} data={districtData} />
         </div>
-        <div className="w-full md:w-1/3 flex flex-col gap-4">
+        <div className="w-full md:w-1/3 flex flex-col gap-4 sticky top-18 self-start">
           <About type="state" name={stateName} />
           {topPopulatedDistricts?.length > 0 && (
             <PopularList
