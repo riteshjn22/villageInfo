@@ -258,12 +258,12 @@ export default async function StatePage({ params }: Props) {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <main className="flex w-full md:max-w-275 m-auto p-4 flex-wrap">
+    <main className="m-auto flex w-full flex-wrap p-4 md:max-w-275">
       <Breadcrumb data={breadcrumbData} />
-      <div className="flex w-full flex-col border gap-4 border-gray-200 rounded-2xl bg-linear-to-b from-slate-50 to-white p-4.5 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
+      <div className="flex w-full flex-col gap-4 rounded-2xl border border-gray-200 bg-linear-to-b from-slate-50 to-white p-4.5 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
         <div className="flex w-full flex-wrap gap-4 md:flex-nowrap">
-          <div className="flex w-full md:w-2/3 flex-col gap-4">
-            <h1 className="text-lg md:text-2xl font-bold">
+          <div className="flex w-full flex-col gap-4 md:w-2/3">
+            <h1 className="text-lg font-bold md:text-2xl">
               {stateName} - Districts, Tehsils, Villages, Population and Census
             </h1>
 
@@ -275,7 +275,7 @@ export default async function StatePage({ params }: Props) {
               />
             ) : (
               <>
-                <p className="text-slate-700 text-sm">
+                <p className="text-sm text-slate-700">
                   {stateName} is a state in {stateData.country} with{" "}
                   {stateData.total_districts} districts,{" "}
                   {stateData.total_tehsils} tehsils and{" "}
@@ -286,7 +286,7 @@ export default async function StatePage({ params }: Props) {
                   overall literacy rate is{" "}
                   {parseFloat(stateData.literates_total_percent).toFixed(2)}%.
                 </p>
-                <p className="text-slate-700 text-sm p-2 border border-gray-200 rounded-md bg-gray-100">
+                <p className="rounded-md border border-gray-200 bg-gray-100 p-2 text-sm text-slate-700">
                   ℹ️ Source: Office of the Registrar General & Census
                   Commissioner, India — Census {census_year}
                 </p>
@@ -307,7 +307,7 @@ export default async function StatePage({ params }: Props) {
           />
         </div>
 
-        <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
+        <div className="flex w-full flex-wrap gap-4 md:flex-nowrap">
           <TopChip
             heading="Total Population"
             value={stateData.total_population}
@@ -330,7 +330,7 @@ export default async function StatePage({ params }: Props) {
           />
         </div>
       </div>
-      <div className="flex w-full gap-4 mt-4 flex-wrap md:flex-nowrap">
+      <div className="mt-4 flex w-full flex-wrap gap-4 md:flex-nowrap">
         <div className="w-full md:w-2/3">
           <Administrative heading={stateName} data={adminData} />
           <Population
@@ -345,7 +345,7 @@ export default async function StatePage({ params }: Props) {
           <Workers heading={stateName} data={workerData} />
           <List type="state" heading={stateName} data={districtData} />
         </div>
-        <div className="w-full md:w-1/3 flex flex-col gap-4 sticky top-18 self-start">
+        <div className="sticky top-18 flex w-full flex-col gap-4 self-start md:w-1/3">
           <About type="state" name={stateName} />
           {topPopulatedDistricts?.length > 0 && (
             <PopularList
