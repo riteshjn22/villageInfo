@@ -28,10 +28,11 @@ export async function GET() {
 
 
 
+
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${tehsils.map((t: { state_slug: string, district_slug: string, block_slug: string }) => `  <url>
-    <loc>${HOST}/${t.state_slug}/${t.district_slug}/${t.block_slug}</loc>
+${tehsils.map((t: { state_slug: string, district_slug: string, tehsil_slug: string }) => `  <url>
+    <loc>${HOST}/${t.state_slug}/${t.district_slug}/${t.tehsil_slug}</loc>
     <lastmod>${new Date().toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

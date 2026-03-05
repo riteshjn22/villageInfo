@@ -421,18 +421,25 @@ export default async function DistrictPage({ params }: Props) {
 
           <div className="w-full md:w-1/3 flex flex-col gap-4">
             <About type="district" name={districtName} />
-            <PopularList
-              heading={`Top Populated ${districtName} Tehsils`}
-              listData={topPopulatedTehsils}
-            />
-            <PopularList
-              heading={`Top Literate ${districtName} Tehsils`}
-              listData={topLitrTehsils}
-            />
-            <PopularList
-              heading="Explore Other Districts"
-              listData={allOtherDistricts}
-            />
+            {topPopulatedTehsils?.length > 0 && (
+              <PopularList
+                heading={`Top Populated ${districtName} Tehsils`}
+                listData={topPopulatedTehsils}
+              />
+            )}
+
+            {topLitrTehsils?.length > 0 && (
+              <PopularList
+                heading={`Top Literate ${districtName} Tehsils`}
+                listData={topLitrTehsils}
+              />
+            )}
+            {allOtherDistricts?.length > 0 && (
+              <PopularList
+                heading="Explore Other Districts"
+                listData={allOtherDistricts}
+              />
+            )}
           </div>
         </div>
 

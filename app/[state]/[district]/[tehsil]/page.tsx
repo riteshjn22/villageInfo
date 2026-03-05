@@ -372,18 +372,25 @@ export default async function TehsilPage({ params }: Props) {
 
           <div className="w-full md:w-1/3 flex flex-col gap-4">
             <About type="tehsil" name={tehsilName} />
-            <PopularList
-              heading={`Top Populated ${tehsilName} Villages`}
-              listData={topPopulatesVillages}
-            />
-            <PopularList
-              heading={`Top Literate ${tehsilName} Villages`}
-              listData={topLitVillages}
-            />
-            <PopularList
-              heading="Explore Other Tehsils"
-              listData={otherTehsils}
-            />
+            {topPopulatesVillages?.length > 0 && (
+              <PopularList
+                heading={`Top Populated ${tehsilName} Villages`}
+                listData={topPopulatesVillages}
+              />
+            )}
+            {topLitVillages?.length > 0 && (
+              <PopularList
+                heading={`Top Literate ${tehsilName} Villages`}
+                listData={topLitVillages}
+              />
+            )}
+
+            {otherTehsils?.length > 0 && (
+              <PopularList
+                heading="Explore Other Tehsils"
+                listData={otherTehsils}
+              />
+            )}
           </div>
         </div>
 

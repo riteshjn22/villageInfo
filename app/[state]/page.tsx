@@ -347,15 +347,24 @@ export default async function StatePage({ params }: Props) {
         </div>
         <div className="w-full md:w-1/3 flex flex-col gap-4">
           <About type="state" name={stateName} />
-          <PopularList
-            heading={`Top Populated ${stateName} Districts`}
-            listData={topPopulatedDistricts}
-          />
-          <PopularList
-            heading={`Top Literate ${stateName} Districts`}
-            listData={topLiterateDistricts}
-          />
-          <PopularList heading={`Explore Other States`} listData={topStates} />
+          {topPopulatedDistricts?.length > 0 && (
+            <PopularList
+              heading={`Top Populated ${stateName} Districts`}
+              listData={topPopulatedDistricts}
+            />
+          )}
+          {topLiterateDistricts?.length > 0 && (
+            <PopularList
+              heading={`Top Literate ${stateName} Districts`}
+              listData={topLiterateDistricts}
+            />
+          )}
+          {topStates?.length > 0 && (
+            <PopularList
+              heading={`Explore Other States`}
+              listData={topStates}
+            />
+          )}
         </div>
       </div>
 

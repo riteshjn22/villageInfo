@@ -388,14 +388,18 @@ export default async function VillagePage({ params }: Props) {
 
           <div className="w-full md:w-1/3 flex flex-col gap-4">
             <About type="village" name={v.village} />
-            <PopularList
-              heading="Explore Other Villages"
-              listData={tehsilVillages}
-            />
-            <PopularList
-              heading={`Go to ${v.village}`}
-              listData={villageTopLinks}
-            />
+            {tehsilVillages?.length > 0 && (
+              <PopularList
+                heading="Explore Other Villages"
+                listData={tehsilVillages}
+              />
+            )}
+            {villageTopLinks?.length > 0 && (
+              <PopularList
+                heading={`Go to ${v.village}`}
+                listData={villageTopLinks}
+              />
+            )}
           </div>
         </div>
 
