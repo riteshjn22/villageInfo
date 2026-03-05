@@ -1,8 +1,8 @@
-import { HOST, REVALIDATE_TIME } from "@/lib/constants/constants";
+import { HOST } from "@/lib/constants/constants";
 import { getDistricts, getStates } from "@/utils/common";
 import { NextResponse } from "next/server";
 
-export const revalidate = REVALIDATE_TIME;
+export const revalidate = 3600;
 
 export async function GET() {
   const states = await getStates();

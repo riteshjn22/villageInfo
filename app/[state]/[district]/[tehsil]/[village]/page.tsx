@@ -15,10 +15,10 @@ import { getContent, getVillages } from "@/utils/common";
 import { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
-import { HOST, REVALIDATE_TIME } from "@/lib/constants/constants";
+import { HOST } from "@/lib/constants/constants";
 import VillageSchema from "@/components/VillageSchema";
 
-export const revalidate = REVALIDATE_TIME;
+export const revalidate = 3600;
 export const dynamicParams = true;
 
 // ────────────────────────────────────────────────────────────

@@ -1,8 +1,8 @@
-import { HOST, REVALIDATE_TIME } from "@/lib/constants/constants";
+import { HOST } from "@/lib/constants/constants";
 import { getStates } from "@/utils/common";
 import { MetadataRoute } from "next";
 
-export const revalidate = REVALIDATE_TIME;
+export const revalidate = 3600;
 
 interface State {
   _id: string;
