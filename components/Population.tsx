@@ -24,18 +24,18 @@ export default function Population({
   scStPopulation,
 }: PopulationProps) {
   return (
-    <div className="flex w-full mt-8 flex-col">
-      <div className="flex gap-4 mb-2.5 items-center justify-between">
-        <h2 className="text-lg md:text-2xl font-bold flex w-fit md:whitespace-nowrap">
+    <div className="mt-8 flex w-full flex-col">
+      <div className="mb-2.5 flex items-center justify-between gap-4">
+        <h2 className="flex w-fit text-lg font-bold md:text-2xl md:whitespace-nowrap">
           Population of {heading} - (Census {year})
         </h2>
-        <span className="md:flex hidden h-px bg-[#e2e8f0] w-full" />
+        <span className="hidden h-px w-full bg-[#e2e8f0] md:flex" />
       </div>
 
-      <div className="flex w-full gap-4 flex-wrap">
+      <div className="flex w-full flex-wrap gap-4">
         {/* Overall Population */}
-        <div className="flex w-full flex-wrap rounded-lg overflow-hidden border border-gray-200">
-          <div className="w-full uppercase text-[#64748b] text-sm tracking-[0.08em] p-3 bg-[#f8fafc] border-b border-b-gray-200">
+        <div className="flex w-full flex-wrap overflow-hidden rounded-lg border border-gray-200">
+          <div className="w-full border-b border-b-gray-200 bg-[#f8fafc] p-3 text-sm tracking-[0.08em] text-[#64748b] uppercase">
             Total Population by Gender
           </div>
 
@@ -56,7 +56,7 @@ export default function Population({
                   return (
                     <div
                       key={index}
-                      className={`w-1/3 flex p-4 flex-col gap-2 text-center border-r border-gray-200 ${
+                      className={`flex w-1/3 flex-col gap-2 border-r border-gray-200 p-4 text-center ${
                         isLastNormal ? "border-r-0" : ""
                       }`}
                     >
@@ -73,13 +73,18 @@ export default function Population({
                 return (
                   <div
                     key={index}
-                    className="w-full flex border-t border-gray-200"
+                    className="flex w-full border-t border-gray-200"
                   >
-                    <div className="w-1/2 text-sm text-[#64748b] capitalize p-3 bg-[#f8fafc]">
+                    <div className="w-1/2 bg-[#f8fafc] p-3 text-sm text-[#64748b] capitalize">
                       {item.label}
                     </div>
-                    <div className="w-1/2 text-sm text-[#0f172a] capitalize p-3 font-bold flex gap-2 flex-wrap">
-                      {item.value ?? "-"}
+                    <div className="flex w-1/2 flex-wrap gap-2 p-3 text-sm font-bold text-[#0f172a] capitalize">
+                      {item.value != null
+                        ? Number.isInteger(Number(item.value))
+                          ? item.value
+                          : parseFloat(String(item.value)).toFixed(2)
+                        : "-"}
+                      %
                       <span className="text-xs font-light text-[#64748b]">
                         females per 1,000 males
                       </span>
@@ -92,10 +97,10 @@ export default function Population({
         </div>
 
         {/* Children + SC/ST */}
-        <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
+        <div className="flex w-full flex-wrap gap-4 md:flex-nowrap">
           {/* Children Population */}
-          <div className="flex w-full md:w-1/2 flex-wrap rounded-lg overflow-hidden border border-gray-200">
-            <div className="w-full uppercase text-[#64748b] text-sm tracking-[0.08em] p-3 bg-[#f8fafc] border-b border-b-gray-200">
+          <div className="flex w-full flex-wrap overflow-hidden rounded-lg border border-gray-200 md:w-1/2">
+            <div className="w-full border-b border-b-gray-200 bg-[#f8fafc] p-3 text-sm tracking-[0.08em] text-[#64748b] uppercase">
               Children Population (Age 0-6 Years)
             </div>
 
@@ -106,10 +111,10 @@ export default function Population({
                     key={index}
                     className="border-b border-b-gray-200 text-sm last:border-b-0"
                   >
-                    <td className="p-4 bg-[#f8fafc] w-1/2 text-[#475569] font-medium">
+                    <td className="w-1/2 bg-[#f8fafc] p-4 font-medium text-[#475569]">
                       {item.label}
                     </td>
-                    <td className="p-4 text-[#0f172a] font-bold">
+                    <td className="p-4 font-bold text-[#0f172a]">
                       {item.value ?? "-"}
                     </td>
                   </tr>
@@ -119,8 +124,8 @@ export default function Population({
           </div>
 
           {/* SC/ST Population */}
-          <div className="flex w-full md:w-1/2 flex-wrap rounded-lg overflow-hidden border border-gray-200">
-            <div className="w-full uppercase text-[#64748b] text-sm tracking-[0.08em] p-3 bg-[#f8fafc] border-b border-b-gray-200">
+          <div className="flex w-full flex-wrap overflow-hidden rounded-lg border border-gray-200 md:w-1/2">
+            <div className="w-full border-b border-b-gray-200 bg-[#f8fafc] p-3 text-sm tracking-[0.08em] text-[#64748b] uppercase">
               Scheduled Caste & Scheduled Tribe
             </div>
 
@@ -134,7 +139,7 @@ export default function Population({
                           <tr>
                             <td
                               colSpan={2}
-                              className="text-xs text-[#2563eb] font-bold pb-2"
+                              className="pb-2 text-xs font-bold text-[#2563eb]"
                             >
                               {section.label}
                             </td>

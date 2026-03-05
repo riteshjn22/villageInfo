@@ -221,8 +221,8 @@ export default async function StatePage({ params }: Props) {
     name: item.district,
     population: item.total_population,
     total: item.total_tehsils,
-    sex_ratio: item?.sex_ratio_percent,
-    literacy_rate: item?.literates_total_percent,
+    sex_ratio: `${item?.sex_ratio_percent.toFixed(2)}%`,
+    literacy_rate: `${item?.literates_total_percent.toFixed(2)}%`,
     district_slug: item?.district_slug,
     state_slug: item?.state_slug,
   }));
@@ -264,7 +264,7 @@ export default async function StatePage({ params }: Props) {
         <div className="flex w-full flex-wrap gap-4 md:flex-nowrap">
           <div className="flex w-full flex-col gap-4 md:w-2/3">
             <h1 className="text-lg font-bold md:text-2xl">
-              {stateName} - Districts, Tehsils, Villages, Population and Census
+              {stateName} - Population, Sex Ratio & Literacy Rate
             </h1>
 
             {content.top_content ? (
@@ -282,8 +282,8 @@ export default async function StatePage({ params }: Props) {
                   {stateData.total_villages} villages. As per Census{" "}
                   {census_year}, the total population is{" "}
                   {stateData.total_population}, sex ratio is{" "}
-                  {stateData.sex_ratio_percent} females per 1,000 males, and the
-                  overall literacy rate is{" "}
+                  {`${stateData.sex_ratio_percent.toFixed(2)}%`} females per
+                  1,000 males, and the overall literacy rate is{" "}
                   {parseFloat(stateData.literates_total_percent).toFixed(2)}%.
                 </p>
                 <p className="rounded-md border border-gray-200 bg-gray-100 p-2 text-sm text-slate-700">

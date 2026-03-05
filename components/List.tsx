@@ -6,9 +6,9 @@ type ListItem = {
   name: string;
   population: number | null;
   total: number | null;
-  sex_ratio: number | null;
-  literacy_rate: number | null;
-  state_slug?: string; // optional — only needed when rows are links
+  sex_ratio: string | number;
+  literacy_rate: string | number;
+  state_slug?: string;
   district_slug?: string;
   tehsil_slug?: string;
   village_slug?: string;
@@ -27,29 +27,29 @@ const TYPE_CONFIG: Record<ListType, { listType: string; total: string }> = {
 };
 
 const TH = ({ children }: { children: React.ReactNode }) => (
-  <th className="p-3 text-[#64748b] text-xs">{children}</th>
+  <th className="p-3 text-xs text-[#64748b]">{children}</th>
 );
 
 const TD = ({ children }: { children: React.ReactNode }) => (
-  <td className="p-3 text-[#64748b] text-xs">{children ?? "—"}</td>
+  <td className="p-3 text-xs text-[#64748b]">{children ?? "—"}</td>
 );
 
 export default function List({ type, heading, data }: Props) {
   const { listType, total } = TYPE_CONFIG[type];
 
   return (
-    <div className="flex w-full mt-8 flex-col">
-      <div className="flex gap-4 mb-2.5 items-center justify-between">
-        <h2 className="text-lg md:text-2xl font-bold flex w-fit md:whitespace-nowrap">
+    <div className="mt-8 flex w-full flex-col">
+      <div className="mb-2.5 flex items-center justify-between gap-4">
+        <h2 className="flex w-fit text-lg font-bold md:text-2xl md:whitespace-nowrap">
           {listType} List in {heading}
         </h2>
-        <span className="md:flex hidden h-px bg-[#e2e8f0] w-full" />
+        <span className="hidden h-px w-full bg-[#e2e8f0] md:flex" />
       </div>
 
-      <div className="w-full flex border border-gray-200 overflow-auto md:overflow-hidden rounded-lg">
+      <div className="flex w-full overflow-auto rounded-lg border border-gray-200 md:overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="bg-[#f8fafc] uppercase text-left">
+            <tr className="bg-[#f8fafc] text-left uppercase">
               <TH>#</TH>
               <TH>{listType} Name</TH>
               <TH>Population</TH>

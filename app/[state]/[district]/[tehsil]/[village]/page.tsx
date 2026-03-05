@@ -322,8 +322,8 @@ export default async function VillagePage({ params }: Props) {
                     {v.census_year}, the total population is{" "}
                     {v.total_population}, sex ratio is {v.sex_ratio_percent}{" "}
                     females per 1,000 males, and the overall literacy rate is{" "}
-                    {v.literates_total_percent}%. The PIN code of {v.village} is{" "}
-                    {v.pin_code}.
+                    {parseFloat(v.literates_total_percent).toFixed(2)}%. The PIN
+                    code of {v.village} is {v.pin_code}.
                   </p>
                   <p className="rounded-md border border-gray-200 bg-gray-100 p-2 text-sm text-slate-700">
                     ℹ️ Source: Office of the Registrar General &amp; Census

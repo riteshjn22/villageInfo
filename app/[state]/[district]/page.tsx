@@ -122,7 +122,7 @@ export default async function DistrictPage({ params }: Props) {
     { label: "District", value: districtName },
     { label: "State", value: districtData.state },
     { label: "Country", value: districtData.country },
-    { label: "Total Area", value: districtData.total_area_sq_km },
+    { label: "Total Area", value: districtData.total_area_sq_km.toFixed(2) },
     { label: "Total Tehsils", value: districtData.total_tehsils },
     { label: "Total Villages", value: districtData.total_villages },
     { label: "Total Households", value: districtData.number_of_households },
@@ -269,8 +269,8 @@ export default async function DistrictPage({ params }: Props) {
     name: item.tehsil,
     population: item.total_population,
     total: item.total_villages,
-    sex_ratio: item?.sex_ratio_percent,
-    literacy_rate: item?.literates_total_percent,
+    sex_ratio: `${item?.sex_ratio_percent.toFixed(2)}%`,
+    literacy_rate: `${item?.literates_total_percent.toFixed(2)}%`,
     state_slug: item?.state_slug,
     district_slug: item?.district_slug,
     tehsil_slug: item?.tehsil_slug,
@@ -310,14 +310,14 @@ export default async function DistrictPage({ params }: Props) {
         state_slug={state}
         tehsils={tehsilsData}
       />
-      <main className="flex w-full md:max-w-275 m-auto p-4 flex-wrap">
+      <main className="m-auto flex w-full flex-wrap p-4 md:max-w-275">
         <Breadcrumb data={breadcrumbData} />
 
-        <div className="flex w-full flex-col border gap-4 border-gray-200 rounded-2xl bg-linear-to-b from-slate-50 to-white p-4.5 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
+        <div className="flex w-full flex-col gap-4 rounded-2xl border border-gray-200 bg-linear-to-b from-slate-50 to-white p-4.5 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
           <div className="flex w-full flex-wrap gap-4 md:flex-nowrap">
-            <div className="flex w-full md:w-2/3 flex-col gap-4">
-              <h1 className="text-lg md:text-2xl font-bold">
-                {districtName} - Population, Sex Ratio &amp; Literacy Rate
+            <div className="flex w-full flex-col gap-4 md:w-2/3">
+              <h1 className="text-lg font-bold md:text-2xl">
+                {districtName} - Population, Sex Ratio & Literacy Rate
               </h1>
 
               {content.top_content ? (
@@ -328,17 +328,20 @@ export default async function DistrictPage({ params }: Props) {
                 />
               ) : (
                 <>
-                  <p className="text-slate-700 text-sm">
+                  <p className="text-sm text-slate-700">
                     {districtName} is a district in {districtData.state},{" "}
                     {districtData.country}, with {districtData.total_tehsils}{" "}
                     tehsils and {districtData.total_villages} villages. As per
                     Census {census_year}, the total population is{" "}
                     {districtData.total_population}, sex ratio is{" "}
-                    {districtData.sex_ratio_percent} females per 1,000 males,
-                    and the overall literacy rate is{" "}
-                    {districtData.literates_total_percent}%.
+                    {`${districtData.sex_ratio_percent.toFixed(2)}%`} females
+                    per 1,000 males, and the overall literacy rate is{" "}
+                    {parseFloat(districtData.literates_total_percent).toFixed(
+                      2,
+                    )}
+                    %.
                   </p>
-                  <p className="text-slate-700 text-sm p-2 border border-gray-200 rounded-md bg-gray-100">
+                  <p className="rounded-md border border-gray-200 bg-gray-100 p-2 text-sm text-slate-700">
                     ℹ️ Source: Office of the Registrar General &amp; Census
                     Commissioner, India — Census {census_year}
                   </p>
@@ -353,7 +356,7 @@ export default async function DistrictPage({ params }: Props) {
                 { label: "State", value: districtData.state },
                 {
                   label: "Area",
-                  value: `${districtData.total_area_sq_km} sq km`,
+                  value: `${parseFloat(districtData.total_area_sq_km).toFixed(2)} sq km`,
                 },
                 {
                   label: "Nearest Railway",
@@ -369,7 +372,7 @@ export default async function DistrictPage({ params }: Props) {
             />
           </div>
 
-          <div className="flex w-full gap-4 flex-wrap md:flex-nowrap">
+          <div className="flex w-full flex-wrap gap-4 md:flex-nowrap">
             <TopChip
               heading="Total Population"
               value={districtData.total_population}
@@ -399,7 +402,7 @@ export default async function DistrictPage({ params }: Props) {
           </div>
         </div>
 
-        <div className="flex w-full gap-4 mt-4 flex-wrap md:flex-nowrap">
+        <div className="mt-4 flex w-full flex-wrap gap-4 md:flex-nowrap">
           <div className="w-full md:w-2/3">
             <WeatherWidget
               latitude={districtData.latitude}
@@ -419,7 +422,7 @@ export default async function DistrictPage({ params }: Props) {
             <List type="district" heading={districtName} data={tehsilData} />
           </div>
 
-          <div className="w-full md:w-1/3 flex flex-col gap-4  sticky top-18 self-start">
+          <div className="sticky top-18 flex w-full flex-col gap-4 self-start md:w-1/3">
             <About type="district" name={districtName} />
             {topPopulatedTehsils?.length > 0 && (
               <PopularList
