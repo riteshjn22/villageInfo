@@ -238,7 +238,6 @@ export default async function StatePage({ params }: Props) {
     { name: "View All States", redirectionUrl: "/" },
   ];
 
-  // Replace the hardcoded topPopulatedDistricts with real data
   const topPopulatedDistricts = [
     ...(topPopDistricts ?? []).map((item: District) => ({
       name: item.district,

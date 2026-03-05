@@ -43,7 +43,7 @@ export async function GET(req) {
       const districts = await District.find({ state_slug })
         .sort(sortQuery)
         .limit(limit)
-        .select("district district_slug")
+        .select("district district_slug state_slug")
         .lean();
 
       return NextResponse.json({ allDistricts: districts }, { status: 200 });
