@@ -22,6 +22,17 @@ type Props = {
   params: Promise<{ state: string; district: string }>;
 };
 
+type District = {
+  _id: string;
+  district: string;
+  district_slug: string;
+  state_slug: string;
+  total_tehsils: number;
+  total_population: number;
+  sex_ratio_percent: number;
+  literates_total_percent: number;
+};
+
 type TehsilItem = {
   tehsil: string;
   tehsil_slug: string;
@@ -62,12 +73,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DistrictPage({ params }: Props) {
   const { state, district } = await params;
 
-  const [content, districtData, tehsilsData] = await Promise.all([
+  const [
+    content,
+    districtData,
+    tehsilsData,
+    allDistricts,
+    topPopTehsils,
+    topLitTehsils,
+  ] = await Promise.all([
     getContent("district", { state_slug: state, district_slug: district }),
     getDistricts({ state_slug: state, district_slug: district }),
     getTehsils({ state_slug: state, district_slug: district }) as Promise<
       TehsilItem[]
     >,
+    getDistricts({ state_slug: state, limit: 5 }),
+    getTehsils({
+      state_slug: state,
+      district_slug: district,
+      limit: 5,
+      sortBy: "population",
+    }),
+    getTehsils({
+      state_slug: state,
+      district_slug: district,
+      limit: 5,
+      sortBy: "literate",
+    }),
   ]);
 
   if (!districtData || districtData?.status === 404) notFound();
@@ -240,15 +271,29 @@ export default async function DistrictPage({ params }: Props) {
     tehsil_slug: item?.tehsil_slug,
   }));
 
-  // TODO: replace with real API data
-  const topPopulatedDistricts = [
-    { name: "Kaithal", redirectionUrl: "/" },
-    { name: "Kaithal", redirectionUrl: "/" },
-    { name: "Kaithal", redirectionUrl: "/" },
-    { name: "Kaithal", redirectionUrl: "/" },
-    { name: "Kaithal", redirectionUrl: "/" },
-    { name: "Kaithal", redirectionUrl: "/" },
-    { name: "View All States", redirectionUrl: "/" },
+  const allOtherDistricts = [
+    ...(allDistricts ?? []).map((item: District) => ({
+      name: item.district,
+      redirectionUrl: `/${item.state_slug}/${item.district_slug}`,
+    })),
+    {
+      name: `View All ${districtData.state} Districts`,
+      redirectionUrl: `/${state}`,
+    },
+  ];
+
+  const topPopulatedTehsils = [
+    ...(topPopTehsils ?? []).map((item: TehsilItem) => ({
+      name: item?.tehsil,
+      redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}`,
+    })),
+  ];
+
+  const topLitrTehsils = [
+    ...(topLitTehsils ?? []).map((item: TehsilItem) => ({
+      name: item?.tehsil,
+      redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}`,
+    })),
   ];
 
   // ─── Render ───────────────────────────────────────────────────────────────────
@@ -369,15 +414,15 @@ export default async function DistrictPage({ params }: Props) {
             <About type="district" name={districtName} />
             <PopularList
               heading={`Top Populated ${districtName} Tehsils`}
-              listData={topPopulatedDistricts}
+              listData={topPopulatedTehsils}
             />
             <PopularList
               heading={`Top Literate ${districtName} Tehsils`}
-              listData={topPopulatedDistricts}
+              listData={topLitrTehsils}
             />
             <PopularList
               heading="Explore Other Districts"
-              listData={topPopulatedDistricts}
+              listData={allOtherDistricts}
             />
           </div>
         </div>

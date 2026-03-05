@@ -52,6 +52,18 @@ type VillageSlug = {
   village_slug: string;
 };
 
+type VillageItem = {
+  village: string;
+  total_population: number;
+  number_of_households: number;
+  sex_ratio_percent: number;
+  literates_total_percent: number;
+  state_slug: string;
+  district_slug: string;
+  tehsil_slug: string;
+  village_slug: string;
+};
+
 type Props = {
   params: Promise<{
     state: string;
@@ -126,9 +138,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function VillagePage({ params }: Props) {
   const { state, district, tehsil, village } = await params;
 
-  const [villagesData, content] = await Promise.all([
+  const [villagesData, content, allVillages] = await Promise.all([
     getCachedVillage(state, district, tehsil, village),
     getCachedContent(state, district, tehsil, village),
+    getVillages({
+      state_slug: state,
+      district_slug: district,
+      block_slug: tehsil,
+      limit: 5,
+    }),
   ]);
 
   if (!villagesData || villagesData?.status === 404) notFound();
@@ -235,6 +253,34 @@ export default async function VillagePage({ params }: Props) {
     { icon: "🏦", name: "Bank", value: v.bank_facilities },
   ];
 
+  const tehsilVillages = [
+    ...(allVillages ?? [])
+      .filter((item: VillageItem) => item?.village !== villagesData?.village) // ← exclude current village
+      .map((item: VillageItem) => ({
+        name: item?.village,
+        redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}/${item?.village_slug}`,
+      })),
+    {
+      name: `All ${villagesData?.tehsil} Villages`,
+      redirectionUrl: `/${villagesData.state_slug}/${villagesData.district_slug}/${villagesData.tehsil}`,
+    },
+  ];
+
+  const villageTopLinks = [
+    {
+      name: `${villagesData?.tehsil} Tehsil`,
+      redirectionUrl: `/${villagesData.state_slug}/${villagesData.district_slug}/${villagesData?.tehsil}`,
+    },
+    {
+      name: `${villagesData?.district} District`,
+      redirectionUrl: `/${villagesData.state_slug}/${villagesData.district_slug}`,
+    },
+    {
+      name: `${villagesData?.state} State`,
+      redirectionUrl: `/${villagesData.state_slug}`,
+    },
+  ];
+
   return (
     <main className="flex w-full md:max-w-275 m-auto p-4 flex-wrap">
       <Breadcrumb data={breadcrumbData} />
@@ -325,9 +371,14 @@ export default async function VillagePage({ params }: Props) {
 
         <div className="w-full md:w-1/3 flex flex-col gap-4">
           <About type="village" name={v.village} />
-          {/* TODO: Replace with real API data */}
-          <PopularList heading="Explore Other Villages" listData={[]} />
-          <PopularList heading={`Go to ${v.village}`} listData={[]} />
+          <PopularList
+            heading="Explore Other Villages"
+            listData={tehsilVillages}
+          />
+          <PopularList
+            heading={`Go to ${v.village}`}
+            listData={villageTopLinks}
+          />
         </div>
       </div>
 

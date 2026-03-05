@@ -20,6 +20,17 @@ type Props = {
   params: Promise<{ state: string; district: string; tehsil: string }>;
 };
 
+type TehsilItem = {
+  tehsil: string;
+  tehsil_slug: string;
+  total_population: number;
+  total_villages: number;
+  sex_ratio_percent: number;
+  literates_total_percent: number;
+  state_slug: string;
+  district_slug: string;
+};
+
 type VillageItem = {
   village: string;
   total_population: number;
@@ -71,10 +82,32 @@ export default async function TehsilPage({ params }: Props) {
     block_slug: tehsil,
   };
 
-  const [content, tehsilData, villagesData] = await Promise.all([
+  const [
+    content,
+    tehsilData,
+    villagesData,
+    allTehsils,
+    topPopVillages,
+    topLiterateVillages,
+  ] = await Promise.all([
     getContent("tehsil", slugs),
     getTehsils(slugs),
     getVillages(slugs) as Promise<VillageItem[]>,
+    getTehsils({ state_slug: state, district_slug: district, limit: 5 }),
+    getVillages({
+      state_slug: state,
+      district_slug: district,
+      block_slug: tehsil,
+      limit: 5,
+      sortBy: "population",
+    }),
+    getVillages({
+      state_slug: state,
+      district_slug: district,
+      block_slug: tehsil,
+      limit: 5,
+      sortBy: "literate",
+    }),
   ]);
 
   if (!tehsilData || tehsilData?.status === 404) notFound();
@@ -198,15 +231,29 @@ export default async function TehsilPage({ params }: Props) {
     village_slug: item.village_slug,
   }));
 
-  // TODO: replace with real API data
-  const topPopulatedTehsils = [
-    { name: "Kaithal", redirectionUrl: "/" },
-    { name: "Kaithal", redirectionUrl: "/" },
-    { name: "Kaithal", redirectionUrl: "/" },
-    { name: "Kaithal", redirectionUrl: "/" },
-    { name: "Kaithal", redirectionUrl: "/" },
-    { name: "Kaithal", redirectionUrl: "/" },
-    { name: "View All Tehsils", redirectionUrl: "/" },
+  const otherTehsils = [
+    ...(allTehsils ?? []).map((item: TehsilItem) => ({
+      name: item?.tehsil,
+      redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}`,
+    })),
+    {
+      name: `View All ${tehsilData.district} Tehsils`,
+      redirectionUrl: `/${tehsilData.state_slug}/${tehsilData.district_slug}`,
+    },
+  ];
+
+  const topPopulatesVillages = [
+    ...(topPopVillages ?? []).map((item: VillageItem) => ({
+      name: item?.village,
+      redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}/${item?.village_slug}`,
+    })),
+  ];
+
+  const topLitVillages = [
+    ...(topLiterateVillages ?? []).map((item: VillageItem) => ({
+      name: item?.village,
+      redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}/${item?.village_slug}`,
+    })),
   ];
 
   // ─── Render ───────────────────────────────────────────────────────────────────
@@ -305,15 +352,15 @@ export default async function TehsilPage({ params }: Props) {
           <About type="tehsil" name={tehsilName} />
           <PopularList
             heading={`Top Populated ${tehsilName} Villages`}
-            listData={topPopulatedTehsils}
+            listData={topPopulatesVillages}
           />
           <PopularList
             heading={`Top Literate ${tehsilName} Villages`}
-            listData={topPopulatedTehsils}
+            listData={topLitVillages}
           />
           <PopularList
             heading="Explore Other Tehsils"
-            listData={topPopulatedTehsils}
+            listData={otherTehsils}
           />
         </div>
       </div>

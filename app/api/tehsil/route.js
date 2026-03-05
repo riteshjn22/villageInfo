@@ -30,6 +30,27 @@ export async function GET(req) {
       return NextResponse.json(tehsil, { status: 200 });
     }
 
+    // Case 2b: state_slug + district_slug + limit + sortBy → return top N tehsils sorted
+    if (state_slug && district_slug && searchParams.get("limit")) {
+      const limit = parseInt(searchParams.get("limit"));
+      const sortBy = searchParams.get("sortBy");
+
+      const sortMap = {
+        population: { total_population: -1 },
+        literate: { literates_total_percent: -1 },
+      };
+
+      const sortQuery = sortMap[sortBy] ?? { tehsil: 1 };
+
+      const tehsils = await Tehsil.find({ state_slug, district_slug })
+        .sort(sortQuery)
+        .limit(limit)
+        .select("tehsil tehsil_slug state_slug district_slug")
+        .lean();
+
+      return NextResponse.json({ allTehsils: tehsils }, { status: 200 });
+    }
+
     // Case 2: Only state_slug provided → return all tehsils for that state
     if (state_slug && district_slug) {
       const tehsils = await Tehsil.find({ state_slug, district_slug })

@@ -15,6 +15,39 @@ export async function GET(req) {
     const village_slug = searchParams.get("village_slug");
     const pageIndex = searchParams.get("pageIndex");
 
+    // Case 1B: All 4 slugs provided → return single village details
+    if (
+      state_slug &&
+      district_slug &&
+      block_slug &&
+      searchParams.get("limit")
+    ) {
+      const limit = parseInt(searchParams.get("limit"));
+      const sortBy = searchParams.get("sortBy");
+
+      const sortMap = {
+        population: { total_population: -1 },
+        literate: { literates_total_percent: -1 },
+      };
+
+      let query = Village.find({
+        state_slug,
+        district_slug,
+        tehsil_slug: block_slug,
+      })
+        .limit(limit)
+        .select("village village_slug state_slug district_slug tehsil_slug");
+
+      // Only apply sort if sortBy is provided
+      if (sortBy && sortMap[sortBy]) {
+        query = query.sort(sortMap[sortBy]);
+      }
+
+      const villages = await query.lean();
+
+      return NextResponse.json({ allVillages: villages }, { status: 200 });
+    }
+
     // Case 1: All 4 slugs provided → return single village details
     if (state_slug && district_slug && block_slug && village_slug) {
       const village = await Village.findOne({

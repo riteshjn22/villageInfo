@@ -33,6 +33,15 @@ export async function GET(req) {
       const limit = parseInt(searchParams.get("limit"));
       const sortBy = searchParams.get("sortBy");
 
+      if (limit && !sortBy) {
+        const districts = await District.find({ state_slug })
+          .limit(limit)
+          .select("district district_slug state_slug")
+          .lean();
+
+        return NextResponse.json({ allDistricts: districts }, { status: 200 });
+      }
+
       const sortMap = {
         population: { total_population: -1 },
         literate: { literates_total_percent: -1 },

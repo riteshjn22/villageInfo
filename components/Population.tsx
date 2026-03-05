@@ -149,7 +149,11 @@ export default function Population({
                                 {item.label}
                               </td>
                               <td className="py-2 text-xs font-bold text-[#0f172a]">
-                                {item.value ?? "-"}
+                                {item.value != null
+                                  ? Number.isInteger(Number(item.value))
+                                    ? String(item.value)
+                                    : parseFloat(String(item.value)).toFixed(2)
+                                  : "-"}
                               </td>
                             </tr>
                           ))}
