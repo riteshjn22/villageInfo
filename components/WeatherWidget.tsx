@@ -79,42 +79,6 @@ type WeatherData = {
 
 // ... keep all WMO_CODES, WMO_EMOJI, getWeatherLabel, getWeatherEmoji, formatDay, WeatherData same ...
 
-// function WeatherSkeleton() {
-//   return (
-//     <div className="w-full animate-pulse rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-//       {/* Current */}
-//       <div className="mb-2 h-4 w-24 rounded bg-gray-200" />
-//       <div className="mb-2 h-12 w-32 rounded bg-gray-200" />
-//       <div className="mb-4 h-4 w-28 rounded bg-gray-200" />
-
-//       <div className="mb-1 flex gap-6 border-t border-gray-100 pt-3">
-//         <div className="h-4 w-24 rounded bg-gray-200" />
-//         <div className="h-4 w-24 rounded bg-gray-200" />
-//       </div>
-//       <div className="mb-5 h-3 w-40 rounded bg-gray-100" />
-
-//       {/* Today highlight */}
-//       <div className="mb-5 flex gap-4 rounded-lg bg-gray-50 px-4 py-3">
-//         <div className="h-4 w-28 rounded bg-gray-200" />
-//         <div className="h-4 w-28 rounded bg-gray-200" />
-//       </div>
-
-//       {/* 7-day */}
-//       <div className="mb-3 h-4 w-24 rounded bg-gray-200" />
-//       <div className="grid grid-cols-7 gap-1">
-//         {Array.from({ length: 7 }).map((_, i) => (
-//           <div key={i} className="flex flex-col items-center gap-2 p-2">
-//             <div className="h-3 w-8 rounded bg-gray-200" />
-//             <div className="h-3 w-8 rounded bg-gray-100" />
-//             <div className="h-6 w-6 rounded-full bg-gray-200" />
-//             <div className="h-3 w-10 rounded bg-gray-200" />
-//             <div className="h-3 w-8 rounded bg-gray-100" />
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// }
 function WeatherSkeleton() {
   return (
     <div className="mt-8 flex w-full animate-pulse flex-col">
