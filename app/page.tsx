@@ -3,8 +3,10 @@ import { getContent, getStates } from "@/utils/common";
 import LordIcon from "@/components/LordIcon";
 import { Metadata } from "next";
 import HtmlContent from "@/components/htmlContent";
-import BlogSection from "@/components/BlogSection";
+import dynamic from "next/dynamic";
 import { HOST } from "@/lib/constants/constants";
+
+const BlogSection = dynamic(() => import("@/components/BlogSection"));
 
 const DEFAULT_METADATA = {
   title: "Village Info India | Explore States, Districts & Villages",

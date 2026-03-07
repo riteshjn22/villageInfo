@@ -26,6 +26,8 @@ export default function BlogSection({ blogData }: { blogData: BlogItem[] }) {
                     src={item?.imageUrl}
                     alt={item?.title}
                     fill
+                    loading="lazy"
+                    sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover"
                   />
                 </div>
