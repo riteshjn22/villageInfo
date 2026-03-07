@@ -10,33 +10,33 @@ type BlogItem = {
 
 export default function BlogSection({ blogData }: { blogData: BlogItem[] }) {
   return (
-    <div className="w-full mt-4">
-      <h2 className="mb-4 font-medium text-base">Blogs</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+    <div className="mt-4 w-full">
+      <h2 className="mb-4 text-base font-medium">Blogs</h2>
+      <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
         {blogData?.map((item, index) => {
           return (
             <Link
               href={item?.url}
               key={index}
-              className="flex items-center border border-gray-300 rounded-lg hover:bg-gray-100 transition overflow-hidden"
+              className="flex items-center overflow-hidden rounded-lg border border-gray-300 transition hover:bg-gray-100"
             >
               {item?.imageUrl && (
-                <div className="w-1/3 h-full relative">
+                <div className="relative h-full w-1/3">
                   <Image
                     src={item?.imageUrl}
-                    alt="item?.title"
+                    alt={item?.title}
                     fill
                     className="object-cover"
                   />
                 </div>
               )}
               <div
-                className={`flex ${item?.imageUrl ? "w-2/3" : "w-full"} flex-col p-4 gap-4`}
+                className={`flex ${item?.imageUrl ? "w-2/3" : "w-full"} flex-col gap-4 p-4`}
               >
-                <h4 className="text-sm font-medium truncate w-full">
+                <p className="w-full truncate text-sm font-medium">
                   {item?.title}
-                </h4>
-                <p className="text-sm line-clamp-2">
+                </p>
+                <p className="line-clamp-2 text-sm">
                   {item?.short_description}
                 </p>
               </div>
