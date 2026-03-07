@@ -23,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
       ? content.description
       : DEFAULT_METADATA.description;
 
-  const image = content?.image || `${HOST}/images/default-share.jpg`;
+  const image = content?.image || `${HOST}images/default-share.jpg`;
 
   return {
     title,

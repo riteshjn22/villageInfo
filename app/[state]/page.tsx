@@ -53,9 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       : stateData?.seo_description;
 
   const image =
-    content?.image ||
-    stateData?.seo_image ||
-    `${HOST}/images/default-share.jpg`;
+    content?.image || stateData?.seo_image || `${HOST}images/default-share.jpg`;
 
   return {
     title,
