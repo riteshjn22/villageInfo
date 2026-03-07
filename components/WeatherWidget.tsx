@@ -79,47 +79,91 @@ type WeatherData = {
 
 // ... keep all WMO_CODES, WMO_EMOJI, getWeatherLabel, getWeatherEmoji, formatDay, WeatherData same ...
 
+// function WeatherSkeleton() {
+//   return (
+//     <div className="w-full animate-pulse rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+//       {/* Current */}
+//       <div className="mb-2 h-4 w-24 rounded bg-gray-200" />
+//       <div className="mb-2 h-12 w-32 rounded bg-gray-200" />
+//       <div className="mb-4 h-4 w-28 rounded bg-gray-200" />
+
+//       <div className="mb-1 flex gap-6 border-t border-gray-100 pt-3">
+//         <div className="h-4 w-24 rounded bg-gray-200" />
+//         <div className="h-4 w-24 rounded bg-gray-200" />
+//       </div>
+//       <div className="mb-5 h-3 w-40 rounded bg-gray-100" />
+
+//       {/* Today highlight */}
+//       <div className="mb-5 flex gap-4 rounded-lg bg-gray-50 px-4 py-3">
+//         <div className="h-4 w-28 rounded bg-gray-200" />
+//         <div className="h-4 w-28 rounded bg-gray-200" />
+//       </div>
+
+//       {/* 7-day */}
+//       <div className="mb-3 h-4 w-24 rounded bg-gray-200" />
+//       <div className="grid grid-cols-7 gap-1">
+//         {Array.from({ length: 7 }).map((_, i) => (
+//           <div key={i} className="flex flex-col items-center gap-2 p-2">
+//             <div className="h-3 w-8 rounded bg-gray-200" />
+//             <div className="h-3 w-8 rounded bg-gray-100" />
+//             <div className="h-6 w-6 rounded-full bg-gray-200" />
+//             <div className="h-3 w-10 rounded bg-gray-200" />
+//             <div className="h-3 w-8 rounded bg-gray-100" />
+//           </div>
+//         ))}
+//       </div>
+//     </div>
+//   );
+// }
 function WeatherSkeleton() {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 w-full animate-pulse">
-      {/* Current */}
-      <div className="h-4 w-24 bg-gray-200 rounded mb-2" />
-      <div className="h-12 w-32 bg-gray-200 rounded mb-2" />
-      <div className="h-4 w-28 bg-gray-200 rounded mb-4" />
+    <div className="mt-8 flex w-full animate-pulse flex-col">
+      {/* Heading Skeleton */}
+      <div className="mb-2.5 h-6 w-2/3 rounded bg-gray-200 md:h-8" />
 
-      <div className="flex gap-6 border-t border-gray-100 pt-3 mb-1">
-        <div className="h-4 w-24 bg-gray-200 rounded" />
-        <div className="h-4 w-24 bg-gray-200 rounded" />
-      </div>
-      <div className="h-3 w-40 bg-gray-100 rounded mb-5" />
+      <div className="w-full rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        {/* Current */}
+        <div className="mb-2 h-4 w-24 rounded bg-gray-200" />
+        <div className="mb-2 h-12 w-32 rounded bg-gray-200" />
+        <div className="mb-4 h-4 w-28 rounded bg-gray-200" />
 
-      {/* Today highlight */}
-      <div className="bg-gray-50 rounded-lg px-4 py-3 mb-5 flex gap-4">
-        <div className="h-4 w-28 bg-gray-200 rounded" />
-        <div className="h-4 w-28 bg-gray-200 rounded" />
-      </div>
+        <div className="mb-1 flex gap-6 border-t border-gray-100 pt-3">
+          <div className="h-4 w-24 rounded bg-gray-200" />
+          <div className="h-4 w-24 rounded bg-gray-200" />
+        </div>
 
-      {/* 7-day */}
-      <div className="h-4 w-24 bg-gray-200 rounded mb-3" />
-      <div className="grid grid-cols-7 gap-1">
-        {Array.from({ length: 7 }).map((_, i) => (
-          <div key={i} className="flex flex-col items-center gap-2 p-2">
-            <div className="h-3 w-8 bg-gray-200 rounded" />
-            <div className="h-3 w-8 bg-gray-100 rounded" />
-            <div className="h-6 w-6 bg-gray-200 rounded-full" />
-            <div className="h-3 w-10 bg-gray-200 rounded" />
-            <div className="h-3 w-8 bg-gray-100 rounded" />
-          </div>
-        ))}
+        <div className="mb-5 h-3 w-40 rounded bg-gray-100" />
+
+        {/* Today highlight */}
+        <div className="mb-5 flex gap-4 rounded-lg bg-gray-50 px-4 py-3">
+          <div className="h-4 w-28 rounded bg-gray-200" />
+          <div className="h-4 w-28 rounded bg-gray-200" />
+        </div>
+
+        {/* 7-day */}
+        <div className="mb-3 h-4 w-24 rounded bg-gray-200" />
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} className="flex flex-col items-center gap-2 p-2">
+              <div className="h-3 w-8 rounded bg-gray-200" />
+              <div className="h-3 w-8 rounded bg-gray-100" />
+              <div className="h-6 w-6 rounded-full bg-gray-200" />
+              <div className="h-3 w-10 rounded bg-gray-200" />
+              <div className="h-3 w-8 rounded bg-gray-100" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
 export default function WeatherWidget({
+  heading,
   latitude,
   longitude,
 }: {
+  heading: string;
   latitude: number;
   longitude: number;
 }) {
@@ -147,7 +191,7 @@ export default function WeatherWidget({
 
   if (error) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 text-sm text-gray-400">
+      <div className="rounded-xl border border-gray-200 bg-white p-5 text-sm text-gray-400 shadow-sm">
         Weather data unavailable.
       </div>
     );
@@ -166,67 +210,75 @@ export default function WeatherWidget({
   });
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 w-full">
-      <p className="text-sm text-gray-500 mb-1">
-        {getWeatherLabel(current.weather_code)}
-      </p>
-      <div className="text-5xl font-bold text-gray-900 mb-1">
-        {Math.round(current.temperature_2m)}°C
+    <div className="mt-8 flex w-full flex-col">
+      <div className="mb-2.5 flex w-full min-w-0">
+        <h2 className="w-full text-lg font-bold md:truncate md:text-2xl">
+          {heading} Weather Today (Live) - Temperature, Rain Forecast & 7-Day
+          Report
+        </h2>
       </div>
-      <p className="text-sm text-gray-500 mb-4">
-        Feels like {Math.round(current.apparent_temperature)}°C
-      </p>
-      <div className="flex gap-6 text-sm text-gray-700 border-t border-gray-100 pt-3 mb-1">
-        <span>
-          <span className="font-medium">Humidity:</span>{" "}
-          {current.relative_humidity_2m}%
-        </span>
-        <span>
-          <span className="font-medium">Wind:</span>{" "}
-          {Math.round(current.wind_speed_10m)} km/h
-        </span>
-      </div>
-      <p className="text-xs text-gray-400 mb-5">Updated: {updatedAt}</p>
+      <div className="w-full rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <p className="mb-1 text-sm text-gray-500">
+          {getWeatherLabel(current.weather_code)}
+        </p>
+        <div className="mb-1 text-5xl font-bold text-gray-900">
+          {Math.round(current.temperature_2m)}°C
+        </div>
+        <p className="mb-4 text-sm text-gray-500">
+          Feels like {Math.round(current.apparent_temperature)}°C
+        </p>
+        <div className="mb-1 flex gap-6 border-t border-gray-100 pt-3 text-sm text-gray-700">
+          <span>
+            <span className="font-medium">Humidity:</span>{" "}
+            {current.relative_humidity_2m}%
+          </span>
+          <span>
+            <span className="font-medium">Wind:</span>{" "}
+            {Math.round(current.wind_speed_10m)} km/h
+          </span>
+        </div>
+        <p className="mb-5 text-xs text-gray-400">Updated: {updatedAt}</p>
 
-      <div className="bg-gray-50 rounded-lg px-4 py-3 mb-5 text-sm text-gray-700 flex gap-4">
-        <span>
-          <span className="font-medium">Today:</span>{" "}
-          {Math.round(daily.temperature_2m_max[0])}° /{" "}
-          {Math.round(daily.temperature_2m_min[0])}°
-        </span>
-        <span>Rain Chance: {daily.precipitation_probability_max[0]}%</span>
-      </div>
+        <div className="mb-5 flex gap-4 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-700">
+          <span>
+            <span className="font-medium">Today:</span>{" "}
+            {Math.round(daily.temperature_2m_max[0])}° /{" "}
+            {Math.round(daily.temperature_2m_min[0])}°
+          </span>
+          <span>Rain Chance: {daily.precipitation_probability_max[0]}%</span>
+        </div>
 
-      {/* 7-Day Forecast */}
-      <h3 className="text-sm font-semibold text-gray-700 mb-3">
-        7-Day Forecast
-      </h3>
-      <div className="overflow-x-auto -mx-5 px-5">
-        <div className="flex gap-1 text-center text-xs text-gray-600">
-          {daily.time.map((dateStr, i) => {
-            const { day, date } = formatDay(dateStr);
-            return (
-              <div
-                key={dateStr}
-                className={`flex flex-col items-center gap-1 rounded-lg p-2 min-w-25 ${
-                  i === 0 ? "bg-blue-50 text-blue-700" : ""
-                }`}
-              >
-                <span className="font-semibold">{day}</span>
-                <span className="text-gray-400">{date}</span>
-                <span className="text-lg">
-                  {getWeatherEmoji(daily.weather_code[i])}
-                </span>
-                <span className="font-medium">
-                  {Math.round(daily.temperature_2m_max[i])}° /{" "}
-                  {Math.round(daily.temperature_2m_min[i])}°
-                </span>
-                <span className="text-gray-400">
-                  Rain: {daily.precipitation_probability_max[i]}%
-                </span>
-              </div>
-            );
-          })}
+        {/* 7-Day Forecast */}
+        <h3 className="mb-3 text-sm font-semibold text-gray-700">
+          7-Day Forecast
+        </h3>
+        <div className="-mx-5 overflow-x-auto px-5">
+          <div className="flex gap-1 text-center text-xs text-gray-600">
+            {daily.time.map((dateStr, i) => {
+              const { day, date } = formatDay(dateStr);
+              return (
+                <div
+                  key={dateStr}
+                  className={`flex min-w-25 flex-col items-center gap-1 rounded-lg p-2 ${
+                    i === 0 ? "bg-blue-50 text-blue-700" : ""
+                  }`}
+                >
+                  <span className="font-semibold">{day}</span>
+                  <span className="text-gray-400">{date}</span>
+                  <span className="text-lg">
+                    {getWeatherEmoji(daily.weather_code[i])}
+                  </span>
+                  <span className="font-medium">
+                    {Math.round(daily.temperature_2m_max[i])}° /{" "}
+                    {Math.round(daily.temperature_2m_min[i])}°
+                  </span>
+                  <span className="text-gray-400">
+                    Rain: {daily.precipitation_probability_max[i]}%
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

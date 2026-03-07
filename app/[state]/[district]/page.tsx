@@ -405,6 +405,7 @@ export default async function DistrictPage({ params }: Props) {
         <div className="mt-4 flex w-full flex-wrap gap-4 md:flex-nowrap">
           <div className="w-full md:w-2/3">
             <WeatherWidget
+              heading={districtName}
               latitude={districtData.latitude}
               longitude={districtData.longitude}
             />
