@@ -26,23 +26,24 @@ export default function Religion({ heading, religionData }: ReligionProps) {
   };
 
   return (
-    <div className="flex w-full mt-8 flex-col">
-      <div className="flex gap-4 mb-2.5 items-center justify-between">
-        <h2 className="text-lg md:text-2xl font-bold flex w-fit md:whitespace-nowrap">
+    <div className="mt-8 flex w-full flex-col">
+      <div className="mb-2.5 flex items-center justify-between gap-4">
+        <h2 className="flex w-fit text-lg font-bold md:text-2xl md:whitespace-nowrap">
           Religion Population in {heading}
         </h2>
-        <span className="md:flex hidden h-px bg-[#e2e8f0] w-full" />
+        <span className="hidden h-px w-full bg-[#e2e8f0] md:flex" />
       </div>
 
-      <div className="w-full flex border border-gray-200 overflow-hidden rounded-lg">
+      <div className="flex w-full overflow-hidden rounded-lg border border-gray-200">
         <table className="w-full">
           <thead>
-            <tr className="bg-[#f8fafc] uppercase text-left">
-              <th className="p-3 text-[#64748b] text-xs">Religion</th>
-              <th className="p-3 text-[#64748b] text-xs w-1/2">
+            <tr className="bg-[#f8fafc] text-left uppercase">
+              <th className="p-3 text-xs text-[#64748b]">Religion</th>
+              <th className="w-1/2 p-3 text-xs text-[#64748b]">
                 Population Share
               </th>
-              <th className="p-3 text-[#64748b] text-xs">Population %</th>
+              <th className="p-3 text-xs text-[#64748b]">Population</th>
+              <th className="p-3 text-xs text-[#64748b]">%</th>
             </tr>
           </thead>
 
@@ -54,16 +55,18 @@ export default function Religion({ heading, religionData }: ReligionProps) {
 
               return (
                 <tr key={index} className="border-t border-gray-200">
-                  <td className="px-3 py-5 text-[#64748b] text-xs font-bold">
+                  <td className="px-3 py-5 text-xs font-bold text-[#64748b]">
                     {item.label}
                   </td>
 
-                  <td className="px-3 py-5 text-[#64748b] text-xs">
-                    <div className={`w-full h-1.5 rounded-lg ${gradient}`} />
+                  <td className="px-3 py-5 text-xs text-[#64748b]">
+                    <div className={`h-1.5 w-full rounded-lg ${gradient}`} />
                   </td>
 
-                  <td className="px-3 py-5 text-[#64748b] text-xs">
-                    <span className="font-bold">{item.value ?? "-"}</span>{" "}
+                  <td className="px-3 py-5 text-xs text-[#64748b]">
+                    <span className="font-bold">{item.value ?? "-"}</span>
+                  </td>
+                  <td className="px-3 py-5 text-xs text-[#64748b]">
                     {formatPercent(item.percent)}%
                   </td>
                 </tr>

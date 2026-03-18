@@ -13,7 +13,7 @@ export default function TehsilSchema({
   district_slug,
   villages,
 }: Props) {
-  const url = `${HOST}/${state_slug}/${district_slug}/${d.tehsil_slug}/`;
+  const url = `${HOST}/${state_slug}/${district_slug}/${d.tehsil_slug}`;
 
   const breadcrumb = {
     "@context": "https://schema.org",
@@ -24,13 +24,13 @@ export default function TehsilSchema({
         "@type": "ListItem",
         position: 2,
         name: d.state,
-        item: `${HOST}/${state_slug}/`,
+        item: `${HOST}/${state_slug}`,
       },
       {
         "@type": "ListItem",
         position: 3,
         name: d.district,
-        item: `${HOST}/${state_slug}/${district_slug}/`,
+        item: `${HOST}/${state_slug}/${district_slug}`,
       },
       { "@type": "ListItem", position: 4, name: d.tehsil, item: url },
     ],
@@ -53,7 +53,7 @@ export default function TehsilSchema({
     containedInPlace: {
       "@type": ["Place", "AdministrativeArea"],
       name: d.district,
-      url: `${HOST}/${state_slug}/${district_slug}/`,
+      url: `${HOST}/${state_slug}/${district_slug}`,
     },
     additionalProperty: [
       {

@@ -6,13 +6,14 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/dashboard/", "/login/"],
+      disallow: ["/api/", "/dashboard/", "/login/", "village-info.vercel.app"],
     },
     sitemap: [
       `${HOST}/sitemap.xml`,
       `${HOST}/districts-sitemap.xml`,
       `${HOST}/tehsils-sitemap.xml`,
       `${HOST}/villages-sitemap.xml`,
+      `${HOST}/blog/sitemap.xml`,
     ],
   };
 }

@@ -27,13 +27,13 @@ export default function DistrictSchema({
         "@type": "ListItem",
         position: 2,
         name: d.state,
-        item: `${HOST}/${state_slug}/`,
+        item: `${HOST}/${state_slug}`,
       },
       {
         "@type": "ListItem",
         position: 3,
         name: d.district,
-        item: `${pageUrl}/`,
+        item: `${pageUrl}`,
       },
     ],
   };
@@ -41,11 +41,11 @@ export default function DistrictSchema({
   const place = {
     "@context": "https://schema.org",
     "@type": ["Place", "AdministrativeArea"],
-    "@id": `${pageUrl}/`,
+    "@id": `${pageUrl}`,
     name: d.district,
     alternateName: `${d.district} District`,
     description: `${d.district} is a district in ${d.state}, ${d.country} with ${d.total_tehsils} tehsils and ${d.total_villages} villages. As per Census ${d.census_year}, the total population is ${d.total_population} with a literacy rate of ${d.literates_total_percent}% and sex ratio of ${d.sex_ratio_percent} females per 1,000 males.`,
-    url: `${pageUrl}/`,
+    url: `${pageUrl}`,
     geo: {
       "@type": "GeoCoordinates",
       latitude: d.latitude,
@@ -119,7 +119,7 @@ export default function DistrictSchema({
     "@type": "Dataset",
     name: `${d.district} Population, Sex Ratio & Literacy Rate \u2014 Census ${d.census_year}`,
     description: `Census ${d.census_year} data for ${d.district} district, ${d.state}, ${d.country}. Includes total population, male and female population, sex ratio, literacy rate, scheduled caste and tribe data, religion-wise population and worker participation rate across ${d.total_tehsils} tehsils and ${d.total_villages} villages.`,
-    url: `${pageUrl}/`,
+    url: `${pageUrl}`,
     identifier: d.district_id,
     keywords: [
       `${d.district} population`,
@@ -248,7 +248,7 @@ export default function DistrictSchema({
     "@type": "ItemList",
     name: `Tehsils List in ${d.district}`,
     description: `List of all ${d.total_tehsils} tehsils in ${d.district} district, ${d.state} with population, total villages, sex ratio and literacy rate as per Census ${d.census_year}.`,
-    url: `${pageUrl}/`,
+    url: `${pageUrl}`,
     numberOfItems: d.total_tehsils,
     itemListOrder: "https://schema.org/ItemListOrderAscending",
     itemListElement: tehsils?.map((tehsil, index) => {
@@ -264,7 +264,7 @@ export default function DistrictSchema({
           containedInPlace: {
             "@type": ["Place", "AdministrativeArea"],
             name: d.district,
-            url: `${pageUrl}/`,
+            url: `${pageUrl}`,
           },
         },
       };
