@@ -6,7 +6,7 @@ async function Footer() {
 
   return (
     <>
-      {footerData?.length && (
+      {footerData?.length > 0 && (
         <WPWidgetArea sidebar="footer" widgets={footerData} />
       )}
       <footer className="mt-auto bg-gray-800 py-4 text-white">

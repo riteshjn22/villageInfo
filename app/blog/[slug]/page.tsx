@@ -99,51 +99,53 @@ export default async function SingleBlog({
     { label: content.title.rendered, redirectionUrl: null },
   ];
   return (
-    <article
-      className="mx-auto flex w-full flex-wrap gap-4 p-4 md:max-w-275 md:flex-nowrap"
-      id="single"
-    >
-      <BlogSchema
-        slug={slug}
-        title={content.title.rendered}
-        description={content.excerpt.rendered.replace(/<[^>]*>/g, "").trim()}
-        image={content.fimg_url}
-        author={content._embedded?.author?.[0]}
-        datePublished={content.date}
-        dateModified={content.modified}
-        breadcrumbs={breadcrumbData}
-      />
-      <div className="flex w-full flex-col md:w-2/3">
-        <Breadcrumb data={breadcrumbData} />
-        {content?.fimg_url && (
-          <div className="relative aspect-video w-full">
-            <Image
-              src={content.fimg_url}
-              alt={content.title.rendered}
-              fill
-              className="object-cover"
-            />
+    <main>
+      <article
+        className="mx-auto flex w-full flex-wrap gap-4 p-4 md:max-w-275 md:flex-nowrap"
+        id="single"
+      >
+        <BlogSchema
+          slug={slug}
+          title={content.title.rendered}
+          description={content.excerpt.rendered.replace(/<[^>]*>/g, "").trim()}
+          image={content.fimg_url}
+          author={content._embedded?.author?.[0]}
+          datePublished={content.date}
+          dateModified={content.modified}
+          breadcrumbs={breadcrumbData}
+        />
+        <div className="flex w-full flex-col md:w-2/3">
+          <Breadcrumb data={breadcrumbData} />
+          {content?.fimg_url && (
+            <div className="relative aspect-video w-full">
+              <Image
+                src={content.fimg_url}
+                alt={content.title.rendered}
+                fill
+                className="object-cover"
+              />
+            </div>
+          )}
+          <div className="flex w-full flex-col">
+            <h1 className="text-[28px]">{content.title.rendered}</h1>
+            <p
+              className="m-0 flex w-full gap-4 truncate text-xs font-medium text-gray-500"
+              id="authorSec"
+            >
+              {author && (
+                <span className="capitalize">{`Author : ${author}`}</span>
+              )}
+              {content?.date && (
+                <span>{`Published : ${formatDate(content.date)}`}</span>
+              )}
+            </p>
           </div>
-        )}
-        <div className="flex w-full flex-col">
-          <h1 className="text-[28px]">{content.title.rendered}</h1>
-          <p
-            className="m-0 flex w-full gap-4 truncate text-xs font-medium text-gray-400"
-            id="authorSec"
-          >
-            {author && (
-              <span className="capitalize">{`Author : ${author}`}</span>
-            )}
-            {content?.date && (
-              <span>{`Published : ${formatDate(content.date)}`}</span>
-            )}
-          </p>
+          <div dangerouslySetInnerHTML={{ __html: content.content.rendered }} />
         </div>
-        <div dangerouslySetInnerHTML={{ __html: content.content.rendered }} />
-      </div>
-      <div className="sticky top-18 flex w-full self-start md:w-1/3">
-        <WPWidgetArea sidebar="right" widgets={rightWidgets} />
-      </div>
-    </article>
+        <div className="sticky top-18 flex w-full self-start md:w-1/3">
+          <WPWidgetArea sidebar="right" widgets={rightWidgets} />
+        </div>
+      </article>
+    </main>
   );
 }
