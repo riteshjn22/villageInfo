@@ -12,7 +12,7 @@ type Props = {
 export default function Breadcrumb({ data }: Props) {
   return (
     <nav
-      className="flex w-full text-sm gap-1 mb-4 capitalize items-center"
+      className="mb-4 flex w-full items-center gap-1 text-sm capitalize"
       aria-label="Breadcrumb"
     >
       {data?.map((item, index) => (

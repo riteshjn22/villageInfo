@@ -16,11 +16,11 @@ export default function StateSchema({ s, districts }: StateSchemaProps) {
   const place = {
     "@context": "https://schema.org",
     "@type": ["Place", "AdministrativeArea"],
-    "@id": `${pageUrl}/`,
+    "@id": `${pageUrl}`,
     name: s.state,
     alternateName: `${s.state} State`,
     description: `${s.state} is a state in ${s.country} with ${s.total_districts} districts, ${s.total_tehsils} tehsils and ${s.total_villages} villages. As per Census ${s.census_year}, the total population is ${s.total_population} with a literacy rate of ${s.literates_total_percent}% and sex ratio of ${s.sex_ratio_percent} females per 1,000 males.`,
-    url: `${pageUrl}/`,
+    url: `${pageUrl}`,
     address: {
       "@type": "PostalAddress",
       addressRegion: s.state,
@@ -85,7 +85,7 @@ export default function StateSchema({ s, districts }: StateSchemaProps) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: `${HOST}/` },
-      { "@type": "ListItem", position: 2, name: s.state, item: `${pageUrl}/` },
+      { "@type": "ListItem", position: 2, name: s.state, item: `${pageUrl}` },
     ],
   };
 
@@ -94,7 +94,7 @@ export default function StateSchema({ s, districts }: StateSchemaProps) {
     "@type": "Dataset",
     name: `${s.state} Population, Sex Ratio & Literacy Rate — Census ${s.census_year}`,
     description: `Census ${s.census_year} data for ${s.state} state, ${s.country}. Includes total population, male and female population, sex ratio, literacy rate, scheduled caste and tribe data, religion-wise population, worker participation rate across ${s.total_districts} districts, ${s.total_tehsils} tehsils and ${s.total_villages} villages.`,
-    url: `${pageUrl}/`,
+    url: `${pageUrl}`,
     identifier: s.state_id,
     keywords: [
       `${s.state} population`,
@@ -228,7 +228,7 @@ export default function StateSchema({ s, districts }: StateSchemaProps) {
     "@type": "ItemList",
     name: `Districts List in ${s.state}`,
     description: `List of all ${s.total_districts} districts in ${s.state} with population, total tehsils, sex ratio and literacy rate as per Census ${s.census_year}.`,
-    url: `${pageUrl}/`,
+    url: `${pageUrl}`,
     numberOfItems: s.total_districts,
     itemListOrder: "https://schema.org/ItemListOrderAscending",
     itemListElement: districts?.map((district, index) => ({
@@ -241,7 +241,7 @@ export default function StateSchema({ s, districts }: StateSchemaProps) {
         containedInPlace: {
           "@type": ["Place", "AdministrativeArea"],
           name: s.state,
-          url: `${pageUrl}/`,
+          url: `${pageUrl}`,
         },
       },
     })),

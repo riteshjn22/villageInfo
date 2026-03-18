@@ -317,7 +317,7 @@ export default async function DistrictPage({ params }: Props) {
           <div className="flex w-full flex-wrap gap-4 md:flex-nowrap">
             <div className="flex w-full flex-col gap-4 md:w-2/3">
               <h1 className="text-lg font-bold md:text-2xl">
-                {districtName} - Population, Sex Ratio & Literacy Rate
+                {districtName} District - Population, Sex Ratio & Literacy Rate
               </h1>
 
               {content.top_content ? (

@@ -13,7 +13,7 @@ export default function VillageSchema({
   district_slug,
   tehsil_slug,
 }: Props) {
-  const url = `${HOST}/${state_slug}/${district_slug}/${tehsil_slug}/${v.village_slug}/`;
+  const url = `${HOST}/${state_slug}/${district_slug}/${tehsil_slug}/${v.village_slug}`;
 
   const breadcrumb = {
     "@context": "https://schema.org",
@@ -30,13 +30,13 @@ export default function VillageSchema({
         "@type": "ListItem",
         position: 3,
         name: v.district,
-        item: `${HOST}/${state_slug}/${district_slug}/`,
+        item: `${HOST}/${state_slug}/${district_slug}`,
       },
       {
         "@type": "ListItem",
         position: 4,
         name: v.tehsil,
-        item: `${HOST}/${state_slug}/${district_slug}/${tehsil_slug}/`,
+        item: `${HOST}/${state_slug}/${district_slug}/${tehsil_slug}`,
       },
       { "@type": "ListItem", position: 5, name: v.village, item: url },
     ],
@@ -190,12 +190,12 @@ export default function VillageSchema({
       {
         "@type": ["Place", "AdministrativeArea"],
         name: v.tehsil,
-        url: `${HOST}/${state_slug}/${district_slug}/${tehsil_slug}/`,
+        url: `${HOST}/${state_slug}/${district_slug}/${tehsil_slug}`,
       },
       {
         "@type": ["Place", "AdministrativeArea"],
         name: v.district,
-        url: `${HOST}/${state_slug}/${district_slug}/`,
+        url: `${HOST}/${state_slug}/${district_slug}`,
       },
       {
         "@type": ["Place", "AdministrativeArea"],

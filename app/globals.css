@@ -1,5 +1,57 @@
 @import "tailwindcss";
 
+#right_sidebar .widget {
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 16px;
+}
+#footer_sidebar .widget {
+  border-right: 1px solid #ccc;
+}
+#footer_sidebar .widget:last-child,
+#right_sidebar .widget:last-child {
+  border: none;
+}
+
+#single p {
+  line-height: 1.5;
+  margin: 20px 0;
+}
+#authorSec {
+  margin: inherit !important;
+}
+#single figure {
+  text-align: center;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+}
+#single hr {
+  margin: 10px 0;
+}
+#single table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  text-align: left;
+}
+#single table td,
+#single table th {
+  word-break: break-word;
+  border-color: #dcdcdc;
+  border: 1px solid;
+  padding: 0.5em;
+}
+#single ul,
+#single ol {
+  font-size: 1em;
+  padding: 0;
+  margin: 1.5em;
+  list-style: disc;
+}
+
 /* :root {
   --background: #ffffff;
   --foreground: #171717;
