@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/dashboard/", "/login/", "village-info.vercel.app"],
+      disallow: ["/api/", "/dashboard/", "/login/"],
     },
     sitemap: [
       `${HOST}/sitemap.xml`,
