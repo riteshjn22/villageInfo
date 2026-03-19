@@ -68,7 +68,7 @@ export default async function CategoryPage({
       <Breadcrumb data={breadcrumbData} />
       <h1 className="mb-4 text-2xl font-bold">Category: {categoryName}</h1>
       <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
-        {posts?.map((item: any) => {
+        {posts?.map((item: any, index: any) => {
           const itemBlogData = {
             url: `/blog/${item?.slug}`,
             imageUrl: item?._embedded?.["wp:featuredmedia"]?.[0]?.source_url,
@@ -79,7 +79,9 @@ export default async function CategoryPage({
             author: item?._embedded?.author?.[0]?.name,
             date: item?.date,
           };
-          return <BlogBody item={itemBlogData} key={item?.id} />;
+          return (
+            <BlogBody item={itemBlogData} key={item?.id} priority={index < 2} />
+          );
         })}
       </div>
       <Pagination currentPage={currentPage} totalPages={totalPages} />

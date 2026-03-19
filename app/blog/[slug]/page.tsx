@@ -121,6 +121,7 @@ export default async function SingleBlog({
               <Image
                 src={content.fimg_url}
                 alt={content.title.rendered}
+                priority={true}
                 fill
                 className="object-cover"
               />

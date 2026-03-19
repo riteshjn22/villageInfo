@@ -86,7 +86,7 @@ export default async function Blog({
     <main className="mx-auto flex w-full flex-col p-4 md:max-w-275">
       <Breadcrumb data={breadcrumbData} />
       <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
-        {posts?.map((item: WPPost) => {
+        {posts?.map((item: WPPost, index: any) => {
           const itemBlogData = {
             url: `/blog/${item?.slug}`,
             imageUrl: item?._embedded?.["wp:featuredmedia"]?.[0]?.source_url,
@@ -97,7 +97,9 @@ export default async function Blog({
             author: item?._embedded?.author?.[0]?.name,
             date: item?.date,
           };
-          return <BlogBody item={itemBlogData} key={item?.id} />;
+          return (
+            <BlogBody item={itemBlogData} key={item?.id} priority={index < 2} />
+          );
         })}
       </div>
       <Pagination currentPage={currentPage} totalPages={totalPages} />
