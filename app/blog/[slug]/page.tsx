@@ -119,12 +119,13 @@ export default async function SingleBlog({
           {content?.fimg_url && (
             <div className="relative aspect-video w-full">
               <Image
-                src={content.fimg_url}
-                alt={content.title.rendered}
-                priority={true}
-                fill
-                className="object-cover"
-              />
+  src={content.fimg_url}
+  alt={content.title.rendered}
+  priority
+  fill
+  sizes="(max-width: 768px) 100vw, 50vw"
+  className="object-cover"
+/>
             </div>
           )}
           <div className="flex w-full flex-col">
