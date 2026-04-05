@@ -106,7 +106,7 @@ export default function TehsilSchema({
       item: {
         "@type": ["Place", "AdministrativeArea"],
         name: v.village,
-        url: `${HOST}/${v.state_slug}/${v.district_slug}/${v.tehsil_slug}/${v.village_slug}/`,
+        url: `${HOST}/${v.state_slug}/${v.district_slug}/${v.tehsil_slug}/${v.village_slug}`,
         containedInPlace: {
           "@type": ["Place", "AdministrativeArea"],
           name: d.tehsil,

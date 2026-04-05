@@ -237,7 +237,7 @@ export default function StateSchema({ s, districts }: StateSchemaProps) {
       item: {
         "@type": ["Place", "AdministrativeArea"],
         name: district.district,
-        url: `${HOST}/${s.state_slug}/${district.district_slug}/`,
+        url: `${HOST}/${s.state_slug}/${district.district_slug}`,
         containedInPlace: {
           "@type": ["Place", "AdministrativeArea"],
           name: s.state,
