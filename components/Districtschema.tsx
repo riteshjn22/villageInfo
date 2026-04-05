@@ -260,7 +260,7 @@ export default function DistrictSchema({
         item: {
           "@type": ["Place", "AdministrativeArea"],
           name: tehsil.tehsil,
-          url: `${HOST}/${state_slug}/${d.district_slug}/${slug}/`,
+          url: `${HOST}/${state_slug}/${d.district_slug}/${slug}`,
           containedInPlace: {
             "@type": ["Place", "AdministrativeArea"],
             name: d.district,

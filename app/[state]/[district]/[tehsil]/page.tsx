@@ -231,12 +231,14 @@ export default async function TehsilPage({ params }: Props) {
     },
   ];
 
+  console.log("Villages Data:", villagesData);
+
   const villageData = villagesData?.map((item) => ({
     name: item.village,
     population: item.total_population,
     total: item.number_of_households,
     sex_ratio: `${item.sex_ratio_percent.toFixed(2)}%`,
-    literacy_rate: `${item.sex_ratio_percent.toFixed(2)}%`,
+    literacy_rate: `${item.literates_total_percent.toFixed(2)}%`,
     state_slug: item.state_slug,
     district_slug: item.district_slug,
     tehsil_slug: item.tehsil_slug,
