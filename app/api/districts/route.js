@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import District from "@/lib/models/district";
-import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { CACHE_HEADERS } from "@/lib/constants/constants";
 
 export async function GET(req) {
   try {
@@ -10,8 +11,33 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const state_slug = searchParams.get("state_slug");
     const district_slug = searchParams.get("district_slug");
+    const pageIndex = searchParams.get("pageIndex");
 
-    // Case 1: Both state_slug AND district_slug provided → return single district details
+    // ── Case 0: No slugs → used by generateStaticParams ──────────────────────
+    if (!state_slug && !district_slug) {
+      if (pageIndex !== null) {
+        const LIMIT = 1000;
+        const skip = parseInt(pageIndex) * LIMIT;
+        const allDistricts = await District.find({})
+          .skip(skip)
+          .limit(LIMIT)
+          .select("district_slug state_slug")
+          .lean();
+        return NextResponse.json(
+          { allDistricts },
+          {
+            status: 200,
+            headers: CACHE_HEADERS,
+          },
+        );
+      }
+
+      // Total count only — no browser cache needed (build-time only)
+      const totalDistricts = await District.countDocuments();
+      return NextResponse.json({ totalDistricts }, { status: 200 });
+    }
+
+    // ── Case 1: Both slugs → single district detail ───────────────────────────
     if (state_slug && district_slug) {
       const district = await District.findOne({
         state_slug,
@@ -25,21 +51,30 @@ export async function GET(req) {
         );
       }
 
-      return NextResponse.json(district, { status: 200 });
+      return NextResponse.json(district, {
+        status: 200,
+        headers: CACHE_HEADERS,
+      });
     }
 
-    // Case 2b: state_slug + limit + sortBy → return top N districts sorted by field
+    // ── Case 2: state + limit → top N sorted ─────────────────────────────────
     if (state_slug && searchParams.get("limit")) {
       const limit = parseInt(searchParams.get("limit"));
       const sortBy = searchParams.get("sortBy");
 
-      if (limit && !sortBy) {
+      if (!sortBy) {
         const districts = await District.find({ state_slug })
           .limit(limit)
           .select("district district_slug state_slug")
           .lean();
 
-        return NextResponse.json({ allDistricts: districts }, { status: 200 });
+        return NextResponse.json(
+          { allDistricts: districts },
+          {
+            status: 200,
+            headers: CACHE_HEADERS,
+          },
+        );
       }
 
       const sortMap = {
@@ -55,10 +90,16 @@ export async function GET(req) {
         .select("district district_slug state_slug")
         .lean();
 
-      return NextResponse.json({ allDistricts: districts }, { status: 200 });
+      return NextResponse.json(
+        { allDistricts: districts },
+        {
+          status: 200,
+          headers: CACHE_HEADERS,
+        },
+      );
     }
 
-    // Case 2: Only state_slug provided → return all districts for that state
+    // ── Case 3: state only → all districts for that state ────────────────────
     if (state_slug) {
       const districts = await District.find({ state_slug })
         .sort({ district: 1 })
@@ -67,10 +108,15 @@ export async function GET(req) {
         )
         .lean();
 
-      return NextResponse.json({ allDistricts: districts }, { status: 200 });
+      return NextResponse.json(
+        { allDistricts: districts },
+        {
+          status: 200,
+          headers: CACHE_HEADERS,
+        },
+      );
     }
 
-    // No params → error (require at least state_slug)
     return NextResponse.json(
       { error: "state_slug parameter is required" },
       { status: 400 },
@@ -97,30 +143,35 @@ export async function POST(req) {
       );
     }
 
-    // ✅ Convert empty values to null
+    // Convert empty values to null
     Object.keys(body).forEach((key) => {
       const value = body[key];
-
-      // Only set to null if it's ACTUALLY empty, not if it's a valid number
       if (value === null || value === undefined || value === "") {
         body[key] = null;
       }
-      // Don't touch numbers, even if they're 0
     });
 
     const district = await District.findOneAndUpdate(
       { district_id: body.district_id },
       { $set: body },
       {
-        returnDocument: "after", // Return updated doc
-        upsert: true, // Create if not exists
-        runValidators: true, // Validate
-        overwrite: false, // Don't replace entire doc, just update fields
+        returnDocument: "after",
+        upsert: true,
+        runValidators: true,
+        overwrite: false,
       },
     );
 
-    // ✅ Clear cache after successful update
-    revalidateTag("districts", "max");
+    // ── Targeted cache invalidation ───────────────────────────────────────────
+    const { state_slug, district_slug } = body;
+
+    if (state_slug && district_slug) {
+      const districtPath = `/${state_slug}/${district_slug}`;
+      const statePath = `/${state_slug}`;
+
+      revalidatePath(districtPath); // clears the specific district page
+      revalidatePath(statePath); // clears the state listing page (shows district list)
+    }
 
     return NextResponse.json(district, { status: 201 });
   } catch (error) {

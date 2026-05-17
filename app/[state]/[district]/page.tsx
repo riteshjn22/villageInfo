@@ -1,4 +1,9 @@
-import { getContent, getDistricts, getTehsils } from "@/utils/common";
+import {
+  getContent,
+  getDistricts,
+  getStates,
+  getTehsils,
+} from "@/utils/common";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import HtmlContent from "@/components/htmlContent";
@@ -17,6 +22,20 @@ import PopularList from "@/components/PopularList";
 import DistrictSchema from "@/components/Districtschema";
 import WeatherWidget from "@/components/WeatherWidget";
 import { HOST } from "@/lib/constants/constants";
+import { cache } from "react";
+
+export const revalidate = 3600;
+export const dynamicParams = true;
+
+// ─── Cached Fetchers ──────────────────────────────────────────────────────────
+
+const getCachedContent = cache((state: string, district: string) =>
+  getContent("district", { state_slug: state, district_slug: district }),
+);
+
+const getCachedDistrictData = cache((state: string, district: string) =>
+  getDistricts({ state_slug: state, district_slug: district }),
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,14 +65,53 @@ type TehsilItem = {
   district_slug: string;
 };
 
+// ─── Static Params ────────────────────────────────────────────────────────────
+export async function generateStaticParams() {
+  try {
+    const countRes = await fetch(`${process.env.HOST}/api/district`, {
+      cache: "no-store",
+    });
+    const { totalDistricts } = await countRes.json();
+    if (!totalDistricts) return [];
+
+    const LIMIT = 1000;
+    const totalPages = Math.ceil(totalDistricts / LIMIT);
+
+    const pages = await Promise.all(
+      Array.from({ length: totalPages }, (_, i) =>
+        fetch(`${process.env.HOST}/api/district?pageIndex=${i}`, {
+          cache: "no-store",
+        })
+          .then((res) => res.json())
+          .then((data) => data.allDistricts ?? []),
+      ),
+    );
+
+    return pages
+      .flat()
+      .filter((d: District) => d?.state_slug && d?.district_slug)
+      .map((d: District) => ({
+        state: d.state_slug,
+        district: d.district_slug,
+      }));
+  } catch (error) {
+    console.error("generateStaticParams error:", error);
+    return [];
+  }
+}
+
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state, district } = await params;
 
+  // const [content, districtData] = await Promise.all([
+  //   getContent("district", { state_slug: state, district_slug: district }),
+  //   getDistricts({ state_slug: state, district_slug: district }),
+  // ]);
   const [content, districtData] = await Promise.all([
-    getContent("district", { state_slug: state, district_slug: district }),
-    getDistricts({ state_slug: state, district_slug: district }),
+    getCachedContent(state, district),
+    getCachedDistrictData(state, district),
   ]);
 
   const title =
@@ -86,8 +144,8 @@ export default async function DistrictPage({ params }: Props) {
     topPopTehsils,
     topLitTehsils,
   ] = await Promise.all([
-    getContent("district", { state_slug: state, district_slug: district }),
-    getDistricts({ state_slug: state, district_slug: district }),
+    getCachedContent(state, district), // ← deduplicated with metadata
+    getCachedDistrictData(state, district), // ← deduplicated with metadata
     getTehsils({ state_slug: state, district_slug: district }) as Promise<
       TehsilItem[]
     >,

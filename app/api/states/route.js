@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import State from "@/lib/models/State";
-import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { CACHE_HEADERS } from "@/lib/constants/constants";
 
 export async function GET(req) {
   try {
@@ -26,24 +27,41 @@ export async function GET(req) {
           .limit(limit)
           .select("state state_slug")
           .lean();
-        return NextResponse.json({ allStates: states }, { status: 200 });
+
+        return NextResponse.json(
+          { allStates: states },
+          {
+            status: 200,
+            headers: CACHE_HEADERS,
+          },
+        );
       }
 
+      // filter provided → single state detail
       const state = await State.findOne(filter).lean();
 
       if (!state) {
         return NextResponse.json({ error: "State not found" }, { status: 404 });
       }
 
-      return NextResponse.json(state, { status: 200 });
+      return NextResponse.json(state, {
+        status: 200,
+        headers: CACHE_HEADERS,
+      });
     } else {
-      // No params: return array with only state and state_slug
+      // No params → all states (used by generateStaticParams)
       const states = await State.find()
         .sort({ name: 1 })
         .select("state state_slug")
         .lean();
 
-      return NextResponse.json({ allStates: states }, { status: 200 });
+      return NextResponse.json(
+        { allStates: states },
+        {
+          status: 200,
+          headers: CACHE_HEADERS,
+        },
+      );
     }
   } catch (error) {
     console.error("GET /states error:", error);
@@ -67,15 +85,12 @@ export async function POST(req) {
       );
     }
 
-    // ✅ Convert empty values to null
+    // Convert empty values to null
     Object.keys(body).forEach((key) => {
       const value = body[key];
-
-      // Only set to null if it's ACTUALLY empty, not if it's a valid number
       if (value === null || value === undefined || value === "") {
         body[key] = null;
       }
-      // Don't touch numbers, even if they're 0
     });
 
     const state = await State.findOneAndUpdate(
@@ -88,13 +103,19 @@ export async function POST(req) {
         overwrite: false,
       },
     );
-    // ✅ Clear cache after successful update
-    revalidateTag("states", "max");
+
+    // ── Targeted cache invalidation ───────────────────────────────────────────
+    const { state_slug } = body;
+
+    if (state_slug) {
+      revalidatePath(`/${state_slug}`); // clears the specific state page
+      revalidatePath("/"); // clears the home page (lists all states)
+    }
+
     return NextResponse.json(state, { status: 201 });
   } catch (error) {
     console.error("POST /states error:", error);
 
-    // Mongoose validation error (schema fields missing/invalid)
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((e) => e.message);
       return NextResponse.json(
@@ -103,7 +124,6 @@ export async function POST(req) {
       );
     }
 
-    // MongoDB duplicate key error
     if (error.code === 11000) {
       return NextResponse.json(
         { error: "Duplicate entry", details: error.keyValue },

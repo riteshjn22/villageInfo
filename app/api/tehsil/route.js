@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Tehsil from "../../../lib/models/tehsil";
-import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { CACHE_HEADERS } from "@/lib/constants/constants";
 
 export async function GET(req) {
   try {
@@ -11,8 +12,33 @@ export async function GET(req) {
     const state_slug = searchParams.get("state_slug");
     const district_slug = searchParams.get("district_slug");
     const tehsil_slug = searchParams.get("block_slug");
+    const pageIndex = searchParams.get("pageIndex");
 
-    // Case 1: Both state_slug AND district_slug provided → return single district details
+    // ── Case 0: No slugs → used by generateStaticParams ──────────────────────
+    if (!state_slug && !district_slug && !tehsil_slug) {
+      if (pageIndex !== null) {
+        const LIMIT = 1000;
+        const skip = parseInt(pageIndex) * LIMIT;
+        const allTehsils = await Tehsil.find({})
+          .skip(skip)
+          .limit(LIMIT)
+          .select("tehsil_slug state_slug district_slug")
+          .lean();
+        return NextResponse.json(
+          { allTehsils },
+          {
+            status: 200,
+            headers: CACHE_HEADERS,
+          },
+        );
+      }
+
+      // Total count only — no browser cache needed (build-time only)
+      const totalTehsils = await Tehsil.countDocuments();
+      return NextResponse.json({ totalTehsils }, { status: 200 });
+    }
+
+    // ── Case 1: All three slugs → single tehsil detail ───────────────────────
     if (state_slug && district_slug && tehsil_slug) {
       const tehsil = await Tehsil.findOne({
         state_slug,
@@ -27,10 +53,13 @@ export async function GET(req) {
         );
       }
 
-      return NextResponse.json(tehsil, { status: 200 });
+      return NextResponse.json(tehsil, {
+        status: 200,
+        headers: CACHE_HEADERS,
+      });
     }
 
-    // Case 2b: state_slug + district_slug + limit + sortBy → return top N tehsils sorted
+    // ── Case 2: state + district + limit → top N sorted ──────────────────────
     if (state_slug && district_slug && searchParams.get("limit")) {
       const limit = parseInt(searchParams.get("limit"));
       const sortBy = searchParams.get("sortBy");
@@ -48,10 +77,16 @@ export async function GET(req) {
         .select("tehsil tehsil_slug state_slug district_slug")
         .lean();
 
-      return NextResponse.json({ allTehsils: tehsils }, { status: 200 });
+      return NextResponse.json(
+        { allTehsils: tehsils },
+        {
+          status: 200,
+          headers: CACHE_HEADERS,
+        },
+      );
     }
 
-    // Case 2: Only state_slug provided → return all tehsils for that state
+    // ── Case 3: state + district → all tehsils for that district ─────────────
     if (state_slug && district_slug) {
       const tehsils = await Tehsil.find({ state_slug, district_slug })
         .sort({ block_tehsil: 1 })
@@ -60,10 +95,15 @@ export async function GET(req) {
         )
         .lean();
 
-      return NextResponse.json({ allTehsils: tehsils }, { status: 200 });
+      return NextResponse.json(
+        { allTehsils: tehsils },
+        {
+          status: 200,
+          headers: CACHE_HEADERS,
+        },
+      );
     }
 
-    // No params → error (require at least state_slug)
     return NextResponse.json(
       { error: "state_slug parameter is required" },
       { status: 400 },
@@ -90,30 +130,35 @@ export async function POST(req) {
       );
     }
 
-    // ✅ Convert empty values to null
+    // Convert empty values to null
     Object.keys(body).forEach((key) => {
       const value = body[key];
-
-      // Only set to null if it's ACTUALLY empty, not if it's a valid number
       if (value === null || value === undefined || value === "") {
         body[key] = null;
       }
-      // Don't touch numbers, even if they're 0
     });
 
     const tehsil = await Tehsil.findOneAndUpdate(
       { tehsil_id: body.tehsil_id },
-      { $set: body }, // Direct update without $set works when upsert is true
+      { $set: body },
       {
-        returnDocument: "after", // Return updated doc
-        upsert: true, // Create if not exists
-        runValidators: true, // Validate
-        overwrite: false, // Don't replace entire doc, just update fields
+        returnDocument: "after",
+        upsert: true,
+        runValidators: true,
+        overwrite: false,
       },
     );
 
-    // ✅ Clear cache after successful update
-    revalidateTag("tehsils", "max");
+    // ── Targeted cache invalidation ───────────────────────────────────────────
+    const { state_slug, district_slug, tehsil_slug } = body;
+
+    if (state_slug && district_slug && tehsil_slug) {
+      const tehsilPath = `/${state_slug}/${district_slug}/${tehsil_slug}`;
+      const districtPath = `/${state_slug}/${district_slug}`;
+
+      revalidatePath(tehsilPath); // clears the specific tehsil page
+      revalidatePath(districtPath); // clears the district listing page (shows tehsil list)
+    }
 
     return NextResponse.json(tehsil, { status: 201 });
   } catch (error) {
@@ -135,7 +180,7 @@ export async function POST(req) {
     }
 
     return NextResponse.json(
-      { error: "Failed to create district", details: error.message },
+      { error: "Failed to create tehsil", details: error.message },
       { status: 500 },
     );
   }

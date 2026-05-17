@@ -16,6 +16,19 @@ import About from "@/components/About";
 import PopularList from "@/components/PopularList";
 import StateSchema from "@/components/Stateschema";
 import { HOST } from "@/lib/constants/constants";
+import { cache } from "react";
+
+export const revalidate = 3600;
+export const dynamicParams = true;
+
+// ─── Cached Fetchers ──────────────────────────────────────────────────────────
+const getCachedContent = cache((state: string) =>
+  getContent("state", { state_slug: state }),
+);
+
+const getCachedStateData = cache((state: string) =>
+  getStates({ state_slug: state }),
+);
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -34,14 +47,31 @@ type District = {
   literates_total_percent: number;
 };
 
+// ─── Static Params ────────────────────────────────────────────────────────────
+export async function generateStaticParams() {
+  try {
+    const states = await getStates(); // fetches all states
+    return (states ?? []).map((s: { state_slug: string }) => ({
+      state: s.state_slug,
+    }));
+  } catch (error) {
+    console.error("generateStaticParams error:", error);
+    return [];
+  }
+}
+
 // ─── Metadata ────────────────────────────────────────────────────────────────
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state } = await params;
 
+  // const [content, stateData] = await Promise.all([
+  //   getContent("state", { state_slug: state }),
+  //   getStates({ state_slug: state }),
+  // ]);
   const [content, stateData] = await Promise.all([
-    getContent("state", { state_slug: state }),
-    getStates({ state_slug: state }),
+    getCachedContent(state),
+    getCachedStateData(state),
   ]);
 
   const title =
@@ -98,8 +128,10 @@ export default async function StatePage({ params }: Props) {
     topPopDistricts,
     topLitDistricts,
   ] = await Promise.all([
-    getContent("state", { state_slug: state }),
-    getStates({ state_slug: state }),
+    // getContent("state", { state_slug: state }),
+    // getStates({ state_slug: state }),
+    getCachedContent(state), // ← was getContent(...)
+    getCachedStateData(state),
     getDistricts({ state_slug: state }) as Promise<District[]>,
     getStates({ limit: 5 }),
     getDistricts({ state_slug: state, limit: 5, sortBy: "population" }),
