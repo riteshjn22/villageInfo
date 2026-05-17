@@ -16,6 +16,8 @@ import { getContent, getTehsils, getVillages } from "@/utils/common";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { connectDB } from "@/lib/mongodb";
+import Tehsil from "@/lib/models/tehsil";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -73,31 +75,15 @@ type VillageItem = {
 
 export async function generateStaticParams() {
   try {
-    const countRes = await fetch(`${process.env.HOST}/api/tehsil`, {
-      cache: "no-store",
-    });
-    const { totalTehsils } = await countRes.json();
-    if (!totalTehsils) return [];
+    await connectDB();
 
-    const LIMIT = 1000;
-    const totalPages = Math.ceil(totalTehsils / LIMIT);
+    const tehsils = await Tehsil.find({})
+      .select("tehsil_slug state_slug district_slug")
+      .lean();
 
-    const pages = await Promise.all(
-      Array.from({ length: totalPages }, (_, i) =>
-        fetch(`${process.env.HOST}/api/tehsil?pageIndex=${i}`, {
-          cache: "no-store",
-        })
-          .then((res) => res.json())
-          .then((data) => data.allTehsils ?? []),
-      ),
-    );
-
-    return pages
-      .flat()
-      .filter(
-        (t: TehsilItem) => t?.state_slug && t?.district_slug && t?.tehsil_slug,
-      )
-      .map((t: TehsilItem) => ({
+    return tehsils
+      .filter((t) => t?.state_slug && t?.district_slug && t?.tehsil_slug)
+      .map((t) => ({
         state: t.state_slug,
         district: t.district_slug,
         tehsil: t.tehsil_slug,
