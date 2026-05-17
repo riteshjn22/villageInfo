@@ -4,6 +4,16 @@ import { NextResponse } from "next/server";
 
 export const revalidate = 3600;
 
+// Escape special XML characters in URLs/values
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
 export async function GET() {
   const states = await getStates();
 
@@ -19,7 +29,7 @@ export async function GET() {
 ${districts
   .map(
     (d: { state_slug: string; district_slug: string }) => `  <url>
-    <loc>${HOST}/${d.state_slug}/${d.district_slug}</loc>
+    <loc>${escapeXml(`${HOST}/${d.state_slug}/${d.district_slug}`)}</loc>
     <lastmod>${new Date().toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>

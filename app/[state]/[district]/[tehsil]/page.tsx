@@ -15,6 +15,30 @@ import { HOST } from "@/lib/constants/constants";
 import { getContent, getTehsils, getVillages } from "@/utils/common";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
+
+export const revalidate = 3600;
+export const dynamicParams = true;
+
+// ─── Cached Fetchers ──────────────────────────────────────────────────────────
+
+const getCachedContent = cache(
+  (state: string, district: string, tehsil: string) =>
+    getContent("tehsil", {
+      state_slug: state,
+      district_slug: district,
+      block_slug: tehsil,
+    }),
+);
+
+const getCachedTehsilData = cache(
+  (state: string, district: string, tehsil: string) =>
+    getTehsils({
+      state_slug: state,
+      district_slug: district,
+      block_slug: tehsil,
+    }),
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,22 +69,53 @@ type VillageItem = {
   village_slug: string;
 };
 
+// ─── Static Params ────────────────────────────────────────────────────────────
+
+export async function generateStaticParams() {
+  try {
+    const countRes = await fetch(`${process.env.HOST}/api/tehsil`, {
+      cache: "no-store",
+    });
+    const { totalTehsils } = await countRes.json();
+    if (!totalTehsils) return [];
+
+    const LIMIT = 1000;
+    const totalPages = Math.ceil(totalTehsils / LIMIT);
+
+    const pages = await Promise.all(
+      Array.from({ length: totalPages }, (_, i) =>
+        fetch(`${process.env.HOST}/api/tehsil?pageIndex=${i}`, {
+          cache: "no-store",
+        })
+          .then((res) => res.json())
+          .then((data) => data.allTehsils ?? []),
+      ),
+    );
+
+    return pages
+      .flat()
+      .filter(
+        (t: TehsilItem) => t?.state_slug && t?.district_slug && t?.tehsil_slug,
+      )
+      .map((t: TehsilItem) => ({
+        state: t.state_slug,
+        district: t.district_slug,
+        tehsil: t.tehsil_slug,
+      }));
+  } catch (error) {
+    console.error("generateStaticParams error:", error);
+    return [];
+  }
+}
+
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state, district, tehsil } = await params;
 
   const [content, tehsilData] = await Promise.all([
-    getContent("tehsil", {
-      state_slug: state,
-      district_slug: district,
-      block_slug: tehsil,
-    }),
-    getTehsils({
-      state_slug: state,
-      district_slug: district,
-      block_slug: tehsil,
-    }),
+    getCachedContent(state, district, tehsil),
+    getCachedTehsilData(state, district, tehsil),
   ]);
 
   const title =
@@ -85,12 +140,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TehsilPage({ params }: Props) {
   const { state, district, tehsil } = await params;
 
-  const slugs = {
-    state_slug: state,
-    district_slug: district,
-    block_slug: tehsil,
-  };
-
   const [
     content,
     tehsilData,
@@ -99,9 +148,13 @@ export default async function TehsilPage({ params }: Props) {
     topPopVillages,
     topLiterateVillages,
   ] = await Promise.all([
-    getContent("tehsil", slugs),
-    getTehsils(slugs),
-    getVillages(slugs) as Promise<VillageItem[]>,
+    getCachedContent(state, district, tehsil), // ← deduplicated with metadata
+    getCachedTehsilData(state, district, tehsil), // ← deduplicated with metadata
+    getVillages({
+      state_slug: state,
+      district_slug: district,
+      block_slug: tehsil,
+    }) as Promise<VillageItem[]>,
     getTehsils({ state_slug: state, district_slug: district, limit: 5 }),
     getVillages({
       state_slug: state,
@@ -230,8 +283,6 @@ export default async function TehsilPage({ params }: Props) {
       percent: tehsilData.total_workers_females_percent,
     },
   ];
-
-  console.log("Villages Data:", villagesData);
 
   const villageData = villagesData?.map((item) => ({
     name: item.village,
@@ -390,7 +441,6 @@ export default async function TehsilPage({ params }: Props) {
                 listData={topLitVillages}
               />
             )}
-
             {otherTehsils?.length > 0 && (
               <PopularList
                 heading="Explore Other Tehsils"

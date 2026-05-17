@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Village from "../../../lib/models/village";
-import { revalidateTag } from "next/cache";
-import { SITE_MAP_PER_PAGE } from "@/lib/constants/constants";
+import { revalidatePath } from "next/cache";
+import { SITE_MAP_PER_PAGE, CACHE_HEADERS } from "@/lib/constants/constants";
 
 export async function GET(req) {
   try {
@@ -16,7 +16,7 @@ export async function GET(req) {
     const village_slug = searchParams.get("village_slug");
     const pageIndex = searchParams.get("pageIndex");
 
-    // Case 1B: All 4 slugs provided → return single village details
+    // Case 1B: state + district + block + limit → top N sorted villages
     if (
       state_slug &&
       district_slug &&
@@ -39,17 +39,21 @@ export async function GET(req) {
         .limit(limit)
         .select("village village_slug state_slug district_slug tehsil_slug");
 
-      // Only apply sort if sortBy is provided
       if (sortBy && sortMap[sortBy]) {
         query = query.sort(sortMap[sortBy]);
       }
 
       const villages = await query.lean();
-
-      return NextResponse.json({ allVillages: villages }, { status: 200 });
+      return NextResponse.json(
+        { allVillages: villages },
+        {
+          status: 200,
+          headers: CACHE_HEADERS,
+        },
+      );
     }
 
-    // Case 1: All 4 slugs provided → return single village details
+    // Case 1: All 4 slugs → single village detail
     if (state_slug && district_slug && block_slug && village_slug) {
       const village = await Village.findOne({
         state_slug,
@@ -65,10 +69,13 @@ export async function GET(req) {
         );
       }
 
-      return NextResponse.json(village, { status: 200 });
+      return NextResponse.json(village, {
+        status: 200,
+        headers: CACHE_HEADERS,
+      });
     }
 
-    // Case 2: state + district + block provided → return all villages for that block
+    // Case 2: state + district + block → all villages for that block
     if (state_slug && district_slug && block_slug) {
       const villages = await Village.find({
         state_slug,
@@ -81,31 +88,41 @@ export async function GET(req) {
         )
         .lean();
 
-      return NextResponse.json({ allVillages: villages }, { status: 200 });
+      return NextResponse.json(
+        { allVillages: villages },
+        {
+          status: 200,
+          headers: CACHE_HEADERS,
+        },
+      );
     }
 
-    // Case 4: pageIndex provided → return paginated villages
+    // Case 3: pageIndex → paginated villages for generateStaticParams / sitemap
     if (pageIndex) {
-      const pageIndex = parseInt(searchParams.get("pageIndex"));
       const villages = await Village.find()
         .sort({ village: 1 })
-        .skip(pageIndex * SITE_MAP_PER_PAGE)
+        .skip(parseInt(pageIndex) * SITE_MAP_PER_PAGE)
         .limit(SITE_MAP_PER_PAGE)
         .select(
           "village village_slug state state_slug district district_slug tehsil_slug block_tehsil total_population updatedAt",
         )
         .lean();
 
-      return NextResponse.json({ allVillages: villages }, { status: 200 });
+      return NextResponse.json(
+        { allVillages: villages },
+        {
+          status: 200,
+          headers: CACHE_HEADERS,
+        },
+      );
     }
 
-    // Case 3: No params → return total villages count
+    // Case 4: No params → total count for generateStaticParams
     if (!state_slug && !district_slug && !block_slug && !village_slug) {
       const totalVillages = await Village.countDocuments();
       return NextResponse.json({ totalVillages }, { status: 200 });
     }
 
-    // No params or incomplete → error
     return NextResponse.json(
       {
         error:
@@ -134,29 +151,37 @@ export async function POST(req) {
         { status: 400 },
       );
     }
-    // ✅ Convert empty values to null
+
+    // Convert empty values to null
     Object.keys(body).forEach((key) => {
       const value = body[key];
-
-      // Only set to null if it's ACTUALLY empty, not if it's a valid number
       if (value === null || value === undefined || value === "") {
         body[key] = null;
       }
-      // Don't touch numbers, even if they're 0
     });
 
     const village = await Village.findOneAndUpdate(
       { village_id: body.village_id },
-      body, // Direct update without $set works when upsert is true
+      body,
       {
-        returnDocument: "after", // Return updated doc
-        upsert: true, // Create if not exists
-        runValidators: true, // Validate
-        overwrite: false, // Don't replace entire doc, just update fields
+        returnDocument: "after",
+        upsert: true,
+        runValidators: true,
+        overwrite: false,
       },
     );
-    // ✅ Clear cache after successful update
-    revalidateTag("villages");
+
+    // ── Targeted cache invalidation ───────────────────────────────────────────
+    // Requires these slug fields to be present in the POST body
+    const { state_slug, district_slug, tehsil_slug, village_slug } = body;
+
+    if (state_slug && district_slug && tehsil_slug && village_slug) {
+      const villagePath = `/${state_slug}/${district_slug}/${tehsil_slug}/${village_slug}`;
+      const tehsilPath = `/${state_slug}/${district_slug}/${tehsil_slug}`;
+
+      revalidatePath(villagePath); // clears the specific village page
+      revalidatePath(tehsilPath); // clears the tehsil listing page (shows village list)
+    }
 
     return NextResponse.json(village, { status: 201 });
   } catch (error) {
