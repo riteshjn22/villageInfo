@@ -1,9 +1,4 @@
-import {
-  getContent,
-  getDistricts,
-  getStates,
-  getTehsils,
-} from "@/utils/common";
+import { getContent, getDistricts, getTehsils } from "@/utils/common";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import HtmlContent from "@/components/htmlContent";
@@ -23,6 +18,8 @@ import DistrictSchema from "@/components/Districtschema";
 import WeatherWidget from "@/components/WeatherWidget";
 import { HOST } from "@/lib/constants/constants";
 import { cache } from "react";
+import { connectDB } from "@/lib/mongodb";
+import District from "@/lib/models/district";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -68,29 +65,15 @@ type TehsilItem = {
 // ─── Static Params ────────────────────────────────────────────────────────────
 export async function generateStaticParams() {
   try {
-    const countRes = await fetch(`${process.env.HOST}/api/district`, {
-      cache: "no-store",
-    });
-    const { totalDistricts } = await countRes.json();
-    if (!totalDistricts) return [];
+    await connectDB();
 
-    const LIMIT = 1000;
-    const totalPages = Math.ceil(totalDistricts / LIMIT);
+    const districts = await District.find({})
+      .select("district_slug state_slug")
+      .lean();
 
-    const pages = await Promise.all(
-      Array.from({ length: totalPages }, (_, i) =>
-        fetch(`${process.env.HOST}/api/district?pageIndex=${i}`, {
-          cache: "no-store",
-        })
-          .then((res) => res.json())
-          .then((data) => data.allDistricts ?? []),
-      ),
-    );
-
-    return pages
-      .flat()
-      .filter((d: District) => d?.state_slug && d?.district_slug)
-      .map((d: District) => ({
+    return districts
+      .filter((d) => d?.state_slug && d?.district_slug)
+      .map((d) => ({
         state: d.state_slug,
         district: d.district_slug,
       }));
@@ -136,19 +119,44 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DistrictPage({ params }: Props) {
   const { state, district } = await params;
 
+  // const [
+  //   content,
+  //   districtData,
+  //   tehsilsData,
+  //   allDistricts,
+  //   topPopTehsils,
+  //   topLitTehsils,
+  // ] = await Promise.all([
+  //   getCachedContent(state, district), // ← deduplicated with metadata
+  //   getCachedDistrictData(state, district), // ← deduplicated with metadata
+  //   getTehsils({ state_slug: state, district_slug: district }) as Promise<
+  //     TehsilItem[]
+  //   >,
+  //   getDistricts({ state_slug: state, limit: 5 }),
+  //   getTehsils({
+  //     state_slug: state,
+  //     district_slug: district,
+  //     limit: 5,
+  //     sortBy: "population",
+  //   }),
+  //   getTehsils({
+  //     state_slug: state,
+  //     district_slug: district,
+  //     limit: 5,
+  //     sortBy: "literate",
+  //   }),
+  // ]);
   const [
     content,
     districtData,
-    tehsilsData,
+    tehsilsRaw,
     allDistricts,
-    topPopTehsils,
-    topLitTehsils,
+    topPopRaw,
+    topLitRaw,
   ] = await Promise.all([
-    getCachedContent(state, district), // ← deduplicated with metadata
-    getCachedDistrictData(state, district), // ← deduplicated with metadata
-    getTehsils({ state_slug: state, district_slug: district }) as Promise<
-      TehsilItem[]
-    >,
+    getCachedContent(state, district),
+    getCachedDistrictData(state, district),
+    getTehsils({ state_slug: state, district_slug: district }),
     getDistricts({ state_slug: state, limit: 5 }),
     getTehsils({
       state_slug: state,
@@ -163,6 +171,19 @@ export default async function DistrictPage({ params }: Props) {
       sortBy: "literate",
     }),
   ]);
+
+  // Normalise — handle both array and { allTehsils: [] } response shapes
+  const tehsilsData: TehsilItem[] = Array.isArray(tehsilsRaw)
+    ? tehsilsRaw
+    : (tehsilsRaw?.allTehsils ?? []);
+
+  const topPopTehsils: TehsilItem[] = Array.isArray(topPopRaw)
+    ? topPopRaw
+    : (topPopRaw?.allTehsils ?? []);
+
+  const topLitTehsils: TehsilItem[] = Array.isArray(topLitRaw)
+    ? topLitRaw
+    : (topLitRaw?.allTehsils ?? []);
 
   if (!districtData || districtData?.status === 404) notFound();
 

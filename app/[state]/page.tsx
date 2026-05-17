@@ -1,6 +1,6 @@
 import { getContent, getDistricts, getStates } from "@/utils/common";
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import HtmlContent from "@/components/htmlContent";
 import BlogSection from "@/components/BlogSection";
 import TopLeft from "@/components/TopLeft";
@@ -17,6 +17,8 @@ import PopularList from "@/components/PopularList";
 import StateSchema from "@/components/Stateschema";
 import { HOST } from "@/lib/constants/constants";
 import { cache } from "react";
+import { connectDB } from "@/lib/mongodb";
+import State from "@/lib/models/State";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -50,10 +52,13 @@ type District = {
 // ─── Static Params ────────────────────────────────────────────────────────────
 export async function generateStaticParams() {
   try {
-    const states = await getStates(); // fetches all states
-    return (states ?? []).map((s: { state_slug: string }) => ({
-      state: s.state_slug,
-    }));
+    await connectDB();
+
+    const states = await State.find({}).select("state_slug").lean();
+
+    return states
+      .filter((s) => s?.state_slug)
+      .map((s) => ({ state: s.state_slug }));
   } catch (error) {
     console.error("generateStaticParams error:", error);
     return [];

@@ -17,6 +17,8 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { HOST } from "@/lib/constants/constants";
 import VillageSchema from "@/components/VillageSchema";
+import { connectDB } from "@/lib/mongodb";
+import Village from "@/lib/models/village";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -80,30 +82,19 @@ type Props = {
 // ────────────────────────────────────────────────────────────
 export async function generateStaticParams() {
   try {
-    const countRes = await fetch(`${process.env.HOST}/api/village`, {
-      cache: "no-store",
-    });
-    const { totalVillages } = await countRes.json();
-    if (!totalVillages) return [];
+    await connectDB();
 
-    const LIMIT = 1000;
-    const totalPages = Math.ceil(totalVillages / LIMIT);
+    const villages = await Village.find({})
+      .select("village_slug state_slug district_slug tehsil_slug")
+      .lean();
 
-    const pages = await Promise.all(
-      Array.from({ length: totalPages }, (_, i) =>
-        fetch(`${process.env.HOST}/api/village?pageIndex=${i}`, {
-          cache: "no-store",
-        })
-          .then((res) => res.json())
-          .then((data) => (data.allVillages ?? []) as VillageSlug[]),
-      ),
-    );
-
-    return pages
-      .flat()
+    return villages
       .filter(
         (v) =>
-          v.state_slug && v.district_slug && v.tehsil_slug && v.village_slug,
+          v?.state_slug &&
+          v?.district_slug &&
+          v?.tehsil_slug &&
+          v?.village_slug,
       )
       .map((v) => ({
         state: v.state_slug,
