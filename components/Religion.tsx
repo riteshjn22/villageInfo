@@ -22,7 +22,7 @@ export default function Religion({ heading, religionData }: ReligionProps) {
   const formatPercent = (val?: string | number | null) => {
     if (val === null || val === undefined) return "-";
     const num = typeof val === "number" ? val : Number(val);
-    return isNaN(num) ? "-" : num.toFixed(2);
+    return isNaN(num) ? "-" : num?.toFixed(2);
   };
 
   return (

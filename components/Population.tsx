@@ -82,7 +82,7 @@ export default function Population({
                       {item.value != null
                         ? Number.isInteger(Number(item.value))
                           ? item.value
-                          : parseFloat(String(item.value)).toFixed(2)
+                          : parseFloat(String(item.value))?.toFixed(2)
                         : "-"}
                       %
                       <span className="text-xs font-light text-[#64748b]">
@@ -157,7 +157,7 @@ export default function Population({
                                 {item.value != null
                                   ? Number.isInteger(Number(item.value))
                                     ? String(item.value)
-                                    : parseFloat(String(item.value)).toFixed(2)
+                                    : parseFloat(String(item.value))?.toFixed(2)
                                   : "-"}
                               </td>
                             </tr>
