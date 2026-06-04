@@ -16,9 +16,10 @@ import { getContent, getTehsils, getVillages } from "@/utils/common";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { connectDB } from "@/lib/mongodb";
+import Tehsil from "@/lib/models/tehsil";
 
-/** On-demand ISR: no build-time DB; cache 24h; revalidate on visit or via API revalidatePath */
-export const revalidate = 86400;
+export const revalidate = 3600;
 export const dynamicParams = true;
 
 // ─── Cached Fetchers ──────────────────────────────────────────────────────────
@@ -70,7 +71,30 @@ type VillageItem = {
   village_slug: string;
 };
 
-// ─── Metadata ────────────────────────────────────────────────────────────────
+// ─── Static Params ────────────────────────────────────────────────────────────
+
+export async function generateStaticParams() {
+  try {
+    await connectDB();
+
+    const tehsils = await Tehsil.find({})
+      .select("tehsil_slug state_slug district_slug")
+      .lean();
+
+    return tehsils
+      .filter((t) => t?.state_slug && t?.district_slug && t?.tehsil_slug)
+      .map((t) => ({
+        state: t.state_slug,
+        district: t.district_slug,
+        tehsil: t.tehsil_slug,
+      }));
+  } catch (error) {
+    console.error("generateStaticParams error:", error);
+    return [];
+  }
+}
+
+// ─── Metadata ─────────────────────────────────────────────────────────────────
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state, district, tehsil } = await params;
