@@ -17,10 +17,9 @@ import PopularList from "@/components/PopularList";
 import StateSchema from "@/components/Stateschema";
 import { HOST } from "@/lib/constants/constants";
 import { cache } from "react";
-import { connectDB } from "@/lib/mongodb";
-import State from "@/lib/models/State";
 
-export const revalidate = 3600;
+/** On-demand ISR: no build-time DB; cache 24h; revalidate on visit or via API revalidatePath */
+export const revalidate = 86400;
 export const dynamicParams = true;
 
 // ─── Cached Fetchers ──────────────────────────────────────────────────────────
@@ -48,22 +47,6 @@ type District = {
   sex_ratio_percent: number;
   literates_total_percent: number;
 };
-
-// ─── Static Params ────────────────────────────────────────────────────────────
-export async function generateStaticParams() {
-  try {
-    await connectDB();
-
-    const states = await State.find({}).select("state_slug").lean();
-
-    return states
-      .filter((s) => s?.state_slug)
-      .map((s) => ({ state: s.state_slug }));
-  } catch (error) {
-    console.error("generateStaticParams error:", error);
-    return [];
-  }
-}
 
 // ─── Metadata ────────────────────────────────────────────────────────────────
 
