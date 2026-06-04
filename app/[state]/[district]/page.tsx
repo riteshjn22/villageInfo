@@ -18,9 +18,10 @@ import DistrictSchema from "@/components/Districtschema";
 import WeatherWidget from "@/components/WeatherWidget";
 import { HOST } from "@/lib/constants/constants";
 import { cache } from "react";
+import { connectDB } from "@/lib/mongodb";
+import District from "@/lib/models/district";
 
-/** On-demand ISR: no build-time DB; cache 24h; revalidate on visit or via API revalidatePath */
-export const revalidate = 86400;
+export const revalidate = 3600;
 export const dynamicParams = true;
 
 // ─── Cached Fetchers ──────────────────────────────────────────────────────────
@@ -60,6 +61,27 @@ type TehsilItem = {
   state_slug: string;
   district_slug: string;
 };
+
+// ─── Static Params ────────────────────────────────────────────────────────────
+export async function generateStaticParams() {
+  try {
+    await connectDB();
+
+    const districts = await District.find({})
+      .select("district_slug state_slug")
+      .lean();
+
+    return districts
+      .filter((d) => d?.state_slug && d?.district_slug)
+      .map((d) => ({
+        state: d.state_slug,
+        district: d.district_slug,
+      }));
+  } catch (error) {
+    console.error("generateStaticParams error:", error);
+    return [];
+  }
+}
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 

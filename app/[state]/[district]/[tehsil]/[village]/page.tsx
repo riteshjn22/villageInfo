@@ -17,9 +17,10 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { HOST } from "@/lib/constants/constants";
 import VillageSchema from "@/components/VillageSchema";
+import { connectDB } from "@/lib/mongodb";
+import Village from "@/lib/models/village";
 
-/** On-demand ISR: no build-time DB; cache 24h; revalidate on visit or via API revalidatePath */
-export const revalidate = 86400;
+export const revalidate = 3600;
 export const dynamicParams = true;
 
 // ────────────────────────────────────────────────────────────
@@ -75,6 +76,37 @@ type Props = {
     village: string;
   }>;
 };
+
+// ────────────────────────────────────────────────────────────
+// Static params
+// ────────────────────────────────────────────────────────────
+export async function generateStaticParams() {
+  try {
+    await connectDB();
+
+    const villages = await Village.find({})
+      .select("village_slug state_slug district_slug tehsil_slug")
+      .lean();
+
+    return villages
+      .filter(
+        (v) =>
+          v?.state_slug &&
+          v?.district_slug &&
+          v?.tehsil_slug &&
+          v?.village_slug,
+      )
+      .map((v) => ({
+        state: v.state_slug,
+        district: v.district_slug,
+        tehsil: v.tehsil_slug,
+        village: v.village_slug,
+      }));
+  } catch (error) {
+    console.error("generateStaticParams error:", error);
+    return [];
+  }
+}
 
 // ────────────────────────────────────────────────────────────
 // Metadata
