@@ -201,7 +201,10 @@ export default async function DistrictPage({ params }: Props) {
     { label: "District", value: districtName },
     { label: "State", value: districtData.state },
     { label: "Country", value: districtData.country },
-    { label: "Total Area", value: districtData.total_area_sq_km.toFixed(2) },
+    {
+      label: "Total Area",
+      value: districtData.total_area_sq_km?.toFixed(2) ?? "N/A",
+    },
     { label: "Total Tehsils", value: districtData.total_tehsils },
     { label: "Total Villages", value: districtData.total_villages },
     { label: "Total Households", value: districtData.number_of_households },
@@ -348,8 +351,8 @@ export default async function DistrictPage({ params }: Props) {
     name: item.tehsil,
     population: item.total_population,
     total: item.total_villages,
-    sex_ratio: `${item?.sex_ratio_percent.toFixed(2)}%`,
-    literacy_rate: `${item?.literates_total_percent.toFixed(2)}%`,
+    sex_ratio: `${item?.sex_ratio_percent?.toFixed(2)}%`,
+    literacy_rate: `${item?.literates_total_percent?.toFixed(2)}%`,
     state_slug: item?.state_slug,
     district_slug: item?.district_slug,
     tehsil_slug: item?.tehsil_slug,
@@ -413,9 +416,9 @@ export default async function DistrictPage({ params }: Props) {
                     tehsils and {districtData.total_villages} villages. As per
                     Census {census_year}, the total population is{" "}
                     {districtData.total_population}, sex ratio is{" "}
-                    {`${districtData.sex_ratio_percent.toFixed(2)}%`} females
+                    {`${districtData.sex_ratio_percent?.toFixed(2)}%`} females
                     per 1,000 males, and the overall literacy rate is{" "}
-                    {parseFloat(districtData.literates_total_percent).toFixed(
+                    {parseFloat(districtData.literates_total_percent)?.toFixed(
                       2,
                     )}
                     %.
@@ -435,7 +438,7 @@ export default async function DistrictPage({ params }: Props) {
                 { label: "State", value: districtData.state },
                 {
                   label: "Area",
-                  value: `${parseFloat(districtData.total_area_sq_km).toFixed(2)} sq km`,
+                  value: `${parseFloat(districtData.total_area_sq_km)?.toFixed(2)} sq km`,
                 },
                 {
                   label: "Nearest Railway",

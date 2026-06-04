@@ -178,7 +178,7 @@ export default async function TehsilPage({ params }: Props) {
     { label: "Country", value: tehsilData.country },
     {
       label: "Total Area",
-      value: `${parseFloat(tehsilData.total_area_sq_km).toFixed(2)} sq km`,
+      value: `${parseFloat(tehsilData.total_area_sq_km)?.toFixed(2)} sq km`,
     },
     { label: "Total Villages", value: tehsilData.total_villages },
     { label: "Total Households", value: tehsilData.number_of_households },
@@ -274,8 +274,8 @@ export default async function TehsilPage({ params }: Props) {
     name: item.village,
     population: item.total_population,
     total: item.number_of_households,
-    sex_ratio: `${item.sex_ratio_percent.toFixed(2)}%`,
-    literacy_rate: `${item.literates_total_percent.toFixed(2)}%`,
+    sex_ratio: `${item.sex_ratio_percent?.toFixed(2)}%`,
+    literacy_rate: `${item.literates_total_percent?.toFixed(2)}%`,
     state_slug: item.state_slug,
     district_slug: item.district_slug,
     tehsil_slug: item.tehsil_slug,
@@ -341,9 +341,9 @@ export default async function TehsilPage({ params }: Props) {
                     {tehsilData.total_villages} villages. As per Census{" "}
                     {census_year}, the total population is{" "}
                     {tehsilData.total_population}, sex ratio is{" "}
-                    {`${tehsilData.sex_ratio_percent.toFixed(2)}%`} females per
+                    {`${tehsilData.sex_ratio_percent?.toFixed(2)}%`} females per
                     1,000 males, and the overall literacy rate is{" "}
-                    {parseFloat(tehsilData.literates_total_percent).toFixed(2)}
+                    {parseFloat(tehsilData.literates_total_percent)?.toFixed(2)}
                     %.
                   </p>
                   <p className="rounded-md border border-gray-200 bg-gray-100 p-2 text-sm text-slate-700">
@@ -363,7 +363,7 @@ export default async function TehsilPage({ params }: Props) {
                 { label: "Country", value: tehsilData.country },
                 {
                   label: "Area",
-                  value: `${parseFloat(tehsilData.total_area_sq_km).toFixed(2)} sq km`,
+                  value: `${parseFloat(tehsilData.total_area_sq_km)?.toFixed(2)} sq km`,
                 },
                 { label: "Tehsil Code", value: tehsilData.tehsil_id },
                 { label: "Census Year", value: census_year },

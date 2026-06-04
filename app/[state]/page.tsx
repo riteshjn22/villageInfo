@@ -282,8 +282,8 @@ export default async function StatePage({ params }: Props) {
     name: item.district,
     population: item.total_population,
     total: item.total_tehsils,
-    sex_ratio: `${item?.sex_ratio_percent.toFixed(2)}%`,
-    literacy_rate: `${item?.literates_total_percent.toFixed(2)}%`,
+    sex_ratio: `${item?.sex_ratio_percent?.toFixed(2)}%`,
+    literacy_rate: `${item?.literates_total_percent?.toFixed(2)}%`,
     district_slug: item?.district_slug,
     state_slug: item?.state_slug,
   }));
@@ -343,9 +343,9 @@ export default async function StatePage({ params }: Props) {
                   {stateData.total_villages} villages. As per Census{" "}
                   {census_year}, the total population is{" "}
                   {stateData.total_population}, sex ratio is{" "}
-                  {`${stateData.sex_ratio_percent.toFixed(2)}%`} females per
+                  {`${stateData.sex_ratio_percent?.toFixed(2)}%`} females per
                   1,000 males, and the overall literacy rate is{" "}
-                  {parseFloat(stateData.literates_total_percent).toFixed(2)}%.
+                  {parseFloat(stateData.literates_total_percent)?.toFixed(2)}%.
                 </p>
                 <p className="rounded-md border border-gray-200 bg-gray-100 p-2 text-sm text-slate-700">
                   ℹ️ Source: Office of the Registrar General & Census

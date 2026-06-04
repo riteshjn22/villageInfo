@@ -453,15 +453,15 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 w-full">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div className="min-h-screen w-full bg-gray-50 px-4 py-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="overflow-hidden rounded-2xl bg-white shadow-lg">
           {/* Header */}
           <div className="bg-linear-to-r from-blue-600 to-blue-700 px-8 py-6">
             <h1 className="text-2xl font-bold text-white">
               MongoDB Data Manager
             </h1>
-            <p className="text-blue-100 text-sm mt-1">
+            <p className="mt-1 text-sm text-blue-100">
               Upload & download Excel data from your database
             </p>
           </div>
@@ -472,8 +472,8 @@ export default function UploadPage() {
               onClick={() => setActiveTab("upload")}
               className={`flex-1 py-4 text-sm font-semibold transition-colors ${
                 activeTab === "upload"
-                  ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                  ? "border-b-2 border-blue-600 bg-blue-50 text-blue-600"
+                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
               }`}
             >
               ⬆️ Upload Excel
@@ -482,8 +482,8 @@ export default function UploadPage() {
               onClick={() => setActiveTab("download")}
               className={`flex-1 py-4 text-sm font-semibold transition-colors ${
                 activeTab === "download"
-                  ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                  ? "border-b-2 border-blue-600 bg-blue-50 text-blue-600"
+                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
               }`}
             >
               ⬇️ Download Excel
@@ -496,13 +496,13 @@ export default function UploadPage() {
               <div>
                 {/* API Endpoint Selector */}
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
                     Select Collection
                   </label>
                   <select
                     value={apiEndpoint}
                     onChange={(e) => setApiEndpoint(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     disabled={uploading}
                   >
                     {ENDPOINTS.map((ep) => (
@@ -515,10 +515,10 @@ export default function UploadPage() {
 
                 {/* File Input */}
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
                     Excel File (.xlsx)
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
+                  <div className="rounded-xl border-2 border-dashed border-gray-300 p-6 text-center transition-colors hover:border-blue-400">
                     <input
                       type="file"
                       accept=".xlsx,.xls"
@@ -528,22 +528,22 @@ export default function UploadPage() {
                       id="file-input"
                     />
                     <label htmlFor="file-input" className="cursor-pointer">
-                      <div className="text-4xl mb-2">📂</div>
+                      <div className="mb-2 text-4xl">📂</div>
                       {file ? (
                         <div>
                           <p className="font-semibold text-gray-800">
                             {file.name}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {(file.size / 1024).toFixed(1)} KB
+                            {(file.size / 1024)?.toFixed(1)} KB
                           </p>
                         </div>
                       ) : (
                         <div>
-                          <p className="text-gray-600 font-medium">
+                          <p className="font-medium text-gray-600">
                             Click to select file
                           </p>
-                          <p className="text-sm text-gray-400 mt-1">
+                          <p className="mt-1 text-sm text-gray-400">
                             Supports .xlsx and .xls
                           </p>
                         </div>
@@ -556,10 +556,10 @@ export default function UploadPage() {
                 <button
                   onClick={handleUpload}
                   disabled={!file || uploading}
-                  className={`w-full py-3 px-4 rounded-xl font-semibold transition-all ${
+                  className={`w-full rounded-xl px-4 py-3 font-semibold transition-all ${
                     !file || uploading
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg"
+                      ? "cursor-not-allowed bg-gray-200 text-gray-400"
+                      : "bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:shadow-lg"
                   }`}
                 >
                   {uploading ? (
@@ -591,7 +591,7 @@ export default function UploadPage() {
                     ].map(({ label, value, color }) => (
                       <div
                         key={label}
-                        className={`bg-${color}-50 border border-${color}-100 p-4 rounded-xl text-center`}
+                        className={`bg-${color}-50 border border-${color}-100 rounded-xl p-4 text-center`}
                       >
                         <div className={`text-2xl font-bold text-${color}-700`}>
                           {value}
@@ -609,7 +609,7 @@ export default function UploadPage() {
                 {/* Logs */}
                 {logs.length > 0 && (
                   <div className="mt-6">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="mb-3 flex items-center justify-between">
                       <h2 className="text-sm font-semibold text-gray-700">
                         Upload Log
                       </h2>
@@ -617,16 +617,16 @@ export default function UploadPage() {
                         {logs.length} entries
                       </span>
                     </div>
-                    <div className="bg-gray-50 rounded-xl p-4 max-h-80 overflow-y-auto space-y-1.5">
+                    <div className="max-h-80 space-y-1.5 overflow-y-auto rounded-xl bg-gray-50 p-4">
                       {logs.map((log, idx) => (
                         <div
                           key={idx}
-                          className={`p-2.5 rounded-lg text-xs ${
+                          className={`rounded-lg p-2.5 text-xs ${
                             log.status === "success"
-                              ? "bg-green-50 text-green-800 border border-green-100"
+                              ? "border border-green-100 bg-green-50 text-green-800"
                               : log.status === "skipped"
-                                ? "bg-yellow-50 text-yellow-800 border border-yellow-100"
-                                : "bg-red-50 text-red-800 border border-red-100"
+                                ? "border border-yellow-100 bg-yellow-50 text-yellow-800"
+                                : "border border-red-100 bg-red-50 text-red-800"
                           }`}
                         >
                           <span className="font-semibold">
@@ -645,34 +645,34 @@ export default function UploadPage() {
             {/* DOWNLOAD TAB */}
             {activeTab === "download" && (
               <div>
-                <p className="text-sm text-gray-500 mb-6">
+                <p className="mb-6 text-sm text-gray-500">
                   Download all records from a collection as an Excel file.
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {DOWNLOAD_ENDPOINTS.map((ep) => (
                     <button
                       key={ep.value}
                       onClick={() => handleDownload(ep.value, ep.label)}
                       disabled={downloading !== null}
-                      className={`flex items-center justify-between p-5 rounded-xl border-2 transition-all text-left ${
+                      className={`flex items-center justify-between rounded-xl border-2 p-5 text-left transition-all ${
                         downloading === ep.value
-                          ? "border-blue-300 bg-blue-50 cursor-wait"
+                          ? "cursor-wait border-blue-300 bg-blue-50"
                           : downloading !== null
-                            ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
-                            : "border-gray-200 hover:border-blue-400 hover:bg-blue-50 hover:shadow-md cursor-pointer"
+                            ? "cursor-not-allowed border-gray-200 bg-gray-50 opacity-60"
+                            : "cursor-pointer border-gray-200 hover:border-blue-400 hover:bg-blue-50 hover:shadow-md"
                       }`}
                     >
                       <div>
                         <div className="font-semibold text-gray-800">
                           {ep.label}
                         </div>
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="mt-0.5 text-xs text-gray-400">
                           {ep.value}
                         </div>
                       </div>
                       <div className="text-2xl">
                         {downloading === ep.value ? (
-                          <span className="animate-spin inline-block">⏳</span>
+                          <span className="inline-block animate-spin">⏳</span>
                         ) : (
                           "⬇️"
                         )}
@@ -681,7 +681,7 @@ export default function UploadPage() {
                   ))}
                 </div>
 
-                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+                <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
                   <strong>Note:</strong> Downloads fetch all records from the
                   database. Large collections (e.g. villages) may take a moment.
                 </div>
