@@ -20,7 +20,7 @@ import VillageSchema from "@/components/VillageSchema";
 import { connectDB } from "@/lib/mongodb";
 import Village from "@/lib/models/village";
 
-export const revalidate = 3600;
+export const revalidate = false;
 export const dynamicParams = true;
 
 // ────────────────────────────────────────────────────────────
@@ -299,7 +299,7 @@ export default async function VillagePage({ params }: Props) {
                 {v.village} Village Population, Sex Ratio & Literacy Rate
               </h1>
 
-              {content.top_content ? (
+              {content?.top_content ? (
                 <HtmlContent
                   type="top"
                   content={content.top_content}
