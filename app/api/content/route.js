@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Content from "@/lib/models/content";
+import { CACHE_HEADERS } from "@/lib/constants/constants"
 
 // GET /api/content?page_id=home
 // GET /api/content?page_id=state&state_slug=maharashtra
@@ -32,13 +33,16 @@ export async function GET(req) {
       village_slug,
     });
 
-    const content = await Content.findOne(query);
+    const content = await Content.findOne(query).lean();
 
     if (!content) {
       return NextResponse.json({ error: "Content not found" }, { status: 404 });
     }
 
-    return NextResponse.json(content, { status: 200 });
+    return NextResponse.json(content, {
+            status: 200,
+            headers: CACHE_HEADERS,
+          });
   } catch (error) {
     console.error("GET /content error:", error);
     return NextResponse.json(
