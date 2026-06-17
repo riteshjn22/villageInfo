@@ -20,7 +20,7 @@ import { cache } from "react";
 import { connectDB } from "@/lib/mongodb";
 import State from "@/lib/models/State";
 
-export const revalidate = 3600;
+export const revalidate = false;
 export const dynamicParams = true;
 
 // ─── Cached Fetchers ──────────────────────────────────────────────────────────
@@ -278,7 +278,7 @@ export default async function StatePage({ params }: Props) {
     },
   ];
 
-  const districtData = districts?.map((item) => ({
+  const districtData = (Array.isArray(districts) ? districts : []).map((item) => ({
     name: item.district,
     population: item.total_population,
     total: item.total_tehsils,
@@ -328,7 +328,7 @@ export default async function StatePage({ params }: Props) {
               {stateName} - Population, Sex Ratio & Literacy Rate
             </h1>
 
-            {content.top_content ? (
+            {content?.top_content ? (
               <HtmlContent
                 type="top"
                 content={content.top_content}
