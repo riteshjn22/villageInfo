@@ -20,7 +20,7 @@ import { connectDB } from "@/lib/mongodb";
 import Tehsil from "@/lib/models/tehsil";
 
 export const revalidate = 3600;
-export const dynamicParams = true;
+export const dynamicParams = false;
 
 // ─── Cached Fetchers ──────────────────────────────────────────────────────────
 
@@ -270,7 +270,7 @@ export default async function TehsilPage({ params }: Props) {
     },
   ];
 
-  const villageData = villagesData?.map((item) => ({
+  const villageData = (Array.isArray(villagesData) ? villagesData : []).map((item) => ({
     name: item.village,
     population: item.total_population,
     total: item.number_of_households,
@@ -327,7 +327,7 @@ export default async function TehsilPage({ params }: Props) {
                 {tehsilName} Tehsil - Population, Sex Ratio & Literacy Rate
               </h1>
 
-              {content.top_content ? (
+              {content?.top_content ? (
                 <HtmlContent
                   type="top"
                   content={content.top_content}
