@@ -21,7 +21,7 @@ import { cache } from "react";
 import { connectDB } from "@/lib/mongodb";
 import District from "@/lib/models/district";
 
-export const revalidate = 3600;
+export const revalidate = false;
 export const dynamicParams = true;
 
 // ─── Cached Fetchers ──────────────────────────────────────────────────────────
@@ -347,7 +347,7 @@ export default async function DistrictPage({ params }: Props) {
     },
   ];
 
-  const tehsilData = tehsilsData?.map((item) => ({
+  const tehsilData = (Array.isArray(tehsilsData) ? tehsilsData : []).map((item) => ({
     name: item.tehsil,
     population: item.total_population,
     total: item.total_villages,
@@ -402,7 +402,7 @@ export default async function DistrictPage({ params }: Props) {
                 {districtName} District - Population, Sex Ratio & Literacy Rate
               </h1>
 
-              {content.top_content ? (
+              {content?.top_content ? (
                 <HtmlContent
                   type="top"
                   content={content.top_content}
