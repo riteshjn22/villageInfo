@@ -35,7 +35,13 @@ export async function GET(req) {
 
       // Total count only — no browser cache needed (build-time only)
       const totalTehsils = await Tehsil.countDocuments();
-      return NextResponse.json({ totalTehsils }, { status: 200 });
+return NextResponse.json(
+  { totalTehsils },
+  {
+    status: 200,
+    headers: CACHE_HEADERS    // ← add this line
+  }
+);
     }
 
     // ── Case 1: All three slugs → single tehsil detail ───────────────────────
