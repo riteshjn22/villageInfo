@@ -21,7 +21,7 @@ import { cache } from "react";
 import { connectDB } from "@/lib/mongodb";
 import District from "@/lib/models/district";
 
-export const revalidate = 604802;
+export const revalidate = false;
 export const dynamicParams = true;
 
 // ─── Cached Fetchers ──────────────────────────────────────────────────────────
