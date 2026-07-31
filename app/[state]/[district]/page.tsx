@@ -359,7 +359,8 @@ export default async function DistrictPage({ params }: Props) {
   }));
 
   const allOtherDistricts = [
-    ...(allDistricts ?? []).map((item: District) => ({
+   // ...(allDistricts ?? []).map((item: District) => ({
+    ...(Array.isArray(allDistricts) ? allDistricts : []).map((item: District) => ({
       name: item.district,
       redirectionUrl: `/${item.state_slug}/${item.district_slug}`,
     })),
@@ -370,14 +371,16 @@ export default async function DistrictPage({ params }: Props) {
   ];
 
   const topPopulatedTehsils = [
-    ...(topPopTehsils ?? []).map((item: TehsilItem) => ({
+    //...(topPopTehsils ?? []).map((item: TehsilItem) => ({
+    ...(Array.isArray(topPopTehsils) ? topPopTehsils : []).map((item: TehsilItem) => ({
       name: item?.tehsil,
       redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}`,
     })),
   ];
 
   const topLitrTehsils = [
-    ...(topLitTehsils ?? []).map((item: TehsilItem) => ({
+    //...(topLitTehsils ?? []).map((item: TehsilItem) => ({
+    ...(Array.isArray(topLitTehsils) ? topLitTehsils : []).map((item: TehsilItem) => ({
       name: item?.tehsil,
       redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}`,
     })),
@@ -390,7 +393,8 @@ export default async function DistrictPage({ params }: Props) {
       <DistrictSchema
         d={districtData}
         state_slug={state}
-        tehsils={tehsilsData}
+       // tehsils={tehsilsData}
+        tehsils={Array.isArray(tehsilsData) ? tehsilsData : []}
       />
       <main className="m-auto flex w-full flex-wrap p-4 md:max-w-275">
         <Breadcrumb data={breadcrumbData} />
