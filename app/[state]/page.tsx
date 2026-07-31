@@ -296,7 +296,8 @@ export default async function StatePage({ params }: Props) {
   ];
 
   const topStates = [
-    ...(allStates ?? []).map((item: { state: string; state_slug: string }) => ({
+   // ...(allStates ?? []).map((item: { state: string; state_slug: string }) => ({
+    ...(Array.isArray(allStates) ? allStates : []).map((item: {
       name: item.state,
       redirectionUrl: item.state_slug,
     })),
@@ -304,14 +305,20 @@ export default async function StatePage({ params }: Props) {
   ];
 
   const topPopulatedDistricts = [
-    ...(topPopDistricts ?? []).map((item: District) => ({
+   // ...(topPopDistricts ?? []).map((item: District) => ({
+     ...(Array.isArray(topPopDistricts)
+    ? topPopDistricts
+    : []).map((item: District) => ({
       name: item.district,
       redirectionUrl: `/${item.state_slug}/${item.district_slug}`,
     })),
   ];
 
   const topLiterateDistricts = [
-    ...(topLitDistricts ?? []).map((item: District) => ({
+   // ...(topLitDistricts ?? []).map((item: District) => ({
+    ...(Array.isArray(topLitDistricts)
+    ? topLitDistricts
+    : []).map((item: District) => ({
       name: item.district,
       redirectionUrl: `/${item.state_slug}/${item.district_slug}`,
     })),
@@ -433,7 +440,10 @@ export default async function StatePage({ params }: Props) {
       {content?.bottom_content && (
         <HtmlContent type="bottom" content={content.bottom_content} />
       )}
-      <StateSchema s={stateData} districts={districts} />
+      <StateSchema
+  s={stateData}
+  districts={Array.isArray(districts) ? districts : []}
+/>
     </main>
   );
 }
