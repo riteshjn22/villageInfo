@@ -254,7 +254,8 @@ export default async function VillagePage({ params }: Props) {
   ];
 
   const tehsilVillages = [
-    ...(allVillages ?? [])
+   // ...(allVillages ?? [])
+    ...(Array.isArray(allVillages) ? allVillages : [])
       .filter((item: VillageItem) => item?.village !== villagesData?.village) // ← exclude current village
       .map((item: VillageItem) => ({
         name: item?.village,
