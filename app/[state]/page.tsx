@@ -297,7 +297,7 @@ export default async function StatePage({ params }: Props) {
 
   const topStates = [
    // ...(allStates ?? []).map((item: { state: string; state_slug: string }) => ({
-    ...(Array.isArray(allStates) ? allStates : []).map((item: {
+    ...(Array.isArray(allStates) ? allStates : []).map((item: { state: string; state_slug: string }) => ({
       name: item.state,
       redirectionUrl: item.state_slug,
     })),
