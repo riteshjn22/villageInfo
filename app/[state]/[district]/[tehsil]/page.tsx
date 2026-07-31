@@ -283,7 +283,8 @@ export default async function TehsilPage({ params }: Props) {
   }));
 
   const otherTehsils = [
-    ...(allTehsils ?? []).map((item: TehsilItem) => ({
+   // ...(allTehsils ?? []).map((item: TehsilItem) => ({
+    ...(Array.isArray(allTehsils) ? allTehsils : []).map((item: TehsilItem) => ({
       name: item?.tehsil,
       redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}`,
     })),
@@ -294,14 +295,16 @@ export default async function TehsilPage({ params }: Props) {
   ];
 
   const topPopulatesVillages = [
-    ...(topPopVillages ?? []).map((item: VillageItem) => ({
+   // ...(topPopVillages ?? []).map((item: VillageItem) => ({
+    ...(Array.isArray(topPopVillages) ? topPopVillages : []).map((item: VillageItem) => ({
       name: item?.village,
       redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}/${item?.village_slug}`,
     })),
   ];
 
   const topLitVillages = [
-    ...(topLiterateVillages ?? []).map((item: VillageItem) => ({
+    //...(topLiterateVillages ?? []).map((item: VillageItem) => ({
+    ...(Array.isArray(topLiterateVillages) ? topLiterateVillages : []).map((item: VillageItem) => ({
       name: item?.village,
       redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}/${item?.village_slug}`,
     })),
@@ -315,7 +318,8 @@ export default async function TehsilPage({ params }: Props) {
         d={tehsilData}
         state_slug={state}
         district_slug={district}
-        villages={villagesData}
+        //villages={villagesData}
+        villages={Array.isArray(villagesData) ? villagesData : []}
       />
       <main className="m-auto flex w-full flex-wrap p-4 md:max-w-275">
         <Breadcrumb data={breadcrumbData} />
