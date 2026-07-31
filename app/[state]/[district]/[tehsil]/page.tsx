@@ -19,7 +19,7 @@ import { cache } from "react";
 import { connectDB } from "@/lib/mongodb";
 import Tehsil from "@/lib/models/tehsil";
 
-export const revalidate = false;
+export const revalidate = 604800;
 export const dynamicParams = true;
 
 // ─── Cached Fetchers ──────────────────────────────────────────────────────────
