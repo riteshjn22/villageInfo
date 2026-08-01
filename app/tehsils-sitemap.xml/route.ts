@@ -5,22 +5,43 @@ import { NextResponse } from "next/server";
 export const revalidate = 3600;
 
 export async function GET() {
-  const states = await getStates();
+    const states = await getStates();
 
-  const districtsByState = await Promise.all(
-    states.map((s: { state_slug: string }) =>
-      getDistricts({ state_slug: s.state_slug }),
-    ),
-  );
-  const districts = districtsByState.flat();
+    // deepak start - old code (replaced below):
+    // const districtsByState = await Promise.all(
+    //   states.map((s: { state_slug: string }) =>
+    //     getDistricts({ state_slug: s.state_slug }),
+    //   ),
+    // );
+    // const districts = districtsByState.flat();
+    //
+    // const tehsilsByDistrict = await Promise.all(
+    //   districts.map((d: { state_slug: string; district_slug: string }) =>
+    //     getTehsils({ state_slug: d.state_slug, district_slug: d.district_slug }),
+    //   ),
+    // );
+    //
+    // const tehsils = tehsilsByDistrict.flat();
+    // deepak end - old code
 
-  const tehsilsByDistrict = await Promise.all(
-    districts.map((d: { state_slug: string; district_slug: string }) =>
-      getTehsils({ state_slug: d.state_slug, district_slug: d.district_slug }),
-    ),
-  );
+    // deepak start - new code: guard against getStates()/getDistricts()/getTehsils()
+    // returning a non-array error object (e.g. on transient DB failure) so the build doesn't crash
+    const statesList = Array.isArray(states) ? states : [];
 
-  const tehsils = tehsilsByDistrict.flat();
+    const districtsByState = await Promise.all(
+          statesList.map((s: { state_slug: string }) =>
+                  getDistricts({ state_slug: s.state_slug }),
+                             ),
+        );
+    const districts = districtsByState.filter((d) => Array.isArray(d)).flat();
+
+    const tehsilsByDistrict = await Promise.all(
+          districts.map((d: { state_slug: string; district_slug: string }) =>
+                  getTehsils({ state_slug: d.state_slug, district_slug: d.district_slug }),
+                            ),
+        );
+    const tehsils = tehsilsByDistrict.filter((t) => Array.isArray(t)).flat();
+    // deepak end - new code
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
