@@ -1,15 +1,10 @@
 import { REVALIDATE_TIME, HOST } from "@/lib/constants/constants";
 
-// ✅ helper to normalize any API response to array
-function toArray(data, arrayKey) {
-  if (Array.isArray(data)) return data
-  if (arrayKey && Array.isArray(data?.[arrayKey])) return data[arrayKey]
-  return []
-}
-
 export async function getStates(params = {}) {
   try {
     const url = new URL(`${HOST}/api/states`);
+
+    // Add query parameters if provided
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         url.searchParams.append(key, value);
@@ -17,25 +12,22 @@ export async function getStates(params = {}) {
     });
 
     const res = await fetch(url.toString(), {
-      next: { revalidate: REVALIDATE_TIME },
+      next: { revalidate: REVALIDATE_TIME }, // revalidate every 24 hours
     });
 
-    if (!res.ok) {
-      // ✅ single state lookup → return error object
-      if (params.state_slug) {
-        return { error: `Failed: ${res.status}`, status: res.status }
-      }
-      return []  // ✅ list lookup → return empty array
-    }
+    if (!res.ok)
+      return {
+        error: `Failed to fetch states: ${res.status}`,
+        status: res.status,
+      };
 
     const data = await res.json();
 
-    // ✅ single state → return object
-    if (params.state_slug && !params.limit) return data
-
-    // ✅ list → always return array
-    return toArray(data, 'allStates')
-
+    if (data?.allStates) {
+      return data.allStates;
+    } else {
+      return data;
+    }
   } catch (error) {
     console.error("getStates error:", error);
     return [];
@@ -45,6 +37,8 @@ export async function getStates(params = {}) {
 export async function getDistricts(params = {}) {
   try {
     const url = new URL(`${HOST}/api/districts`);
+
+    // Add query parameters if provided
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         url.searchParams.append(key, value);
@@ -52,25 +46,24 @@ export async function getDistricts(params = {}) {
     });
 
     const res = await fetch(url.toString(), {
-      next: { revalidate: REVALIDATE_TIME },
+      next: { revalidate: REVALIDATE_TIME }, // revalidate every 24 hours
     });
 
-    if (!res.ok) {
-      // ✅ single district lookup → return error object
-      if (params.state_slug && params.district_slug) {
-        return { error: `Failed: ${res.status}`, status: res.status }
-      }
-      return []  // ✅ list lookup → return empty array
-    }
+    if (!res.ok)
+      return {
+        error: `Failed to fetch states: ${res.status}`,
+        status: res.status,
+      };
 
     const data = await res.json();
 
-    // ✅ single district → return object
-    if (params.state_slug && params.district_slug && !params.limit) return data
-
-    // ✅ list → always return array
-    return toArray(data, 'allDistricts')
-
+    // If allDistricts array exists, return it (multiple districts)
+    // Otherwise return the single district object
+    if (data?.allDistricts) {
+      return data.allDistricts;
+    } else {
+      return data;
+    }
   } catch (error) {
     console.error("getDistricts error:", error);
     return [];
@@ -80,6 +73,8 @@ export async function getDistricts(params = {}) {
 export async function getTehsils(params = {}) {
   try {
     const url = new URL(`${HOST}/api/tehsil`);
+
+    // Add query parameters if provided
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         url.searchParams.append(key, value);
@@ -87,25 +82,24 @@ export async function getTehsils(params = {}) {
     });
 
     const res = await fetch(url.toString(), {
-      next: { revalidate: REVALIDATE_TIME },
+      next: { revalidate: REVALIDATE_TIME }, // revalidate every 24 hours
     });
 
-    if (!res.ok) {
-      // ✅ single tehsil lookup → return error object
-      if (params.state_slug && params.district_slug && params.block_slug) {
-        return { error: `Failed: ${res.status}`, status: res.status }
-      }
-      return []  // ✅ list lookup → return empty array
-    }
+    if (!res.ok)
+      return {
+        error: `Failed to fetch states: ${res.status}`,
+        status: res.status,
+      };
 
     const data = await res.json();
 
-    // ✅ single tehsil → return object
-    if (params.state_slug && params.district_slug && params.block_slug) return data
-
-    // ✅ list → always return array
-    return toArray(data, 'allTehsils')
-
+    // If allTehsils array exists, return it (multiple tehsils)
+    // Otherwise return the single tehsil object
+    if (data?.allTehsils) {
+      return data.allTehsils;
+    } else {
+      return data;
+    }
   } catch (error) {
     console.error("getTehsils error:", error);
     return [];
@@ -115,6 +109,8 @@ export async function getTehsils(params = {}) {
 export async function getVillages(params = {}) {
   try {
     const url = new URL(`${HOST}/api/village`);
+
+    // Add query parameters if provided
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         url.searchParams.append(key, value);
@@ -122,36 +118,39 @@ export async function getVillages(params = {}) {
     });
 
     const res = await fetch(url.toString(), {
-      next: { revalidate: REVALIDATE_TIME },
+      next: { revalidate: REVALIDATE_TIME }, // revalidate every 24 hours
     });
 
-    if (!res.ok) {
-      // ✅ single village lookup → return error object
-      if (params.village_slug) {
-        return { error: `Failed: ${res.status}`, status: res.status }
-      }
-      return []  // ✅ list → return empty array
-    }
+    if (!res.ok)
+      return {
+        error: `Failed to fetch states: ${res.status}`,
+        status: res.status,
+      };
 
     const data = await res.json();
 
-    // ✅ single village → return object
-    if (params.village_slug) return data
-
-    // ✅ list → always return array
-    return toArray(data, 'allVillages')
-
+    // If allVillages array exists, return it (multiple villages)
+    // Otherwise return the single village object
+    if (data?.allVillages) {
+      return data.allVillages;
+    } else {
+      return data;
+    }
   } catch (error) {
     console.error("getVillages error:", error);
     return [];
   }
 }
 
-// getContent stays same ✅
+// GET /api/content?page_id=home
+// GET /api/content?page_id=home
 export async function getContent(page_id, params = {}) {
   try {
     const url = new URL(`${HOST}/api/content`);
+
     url.searchParams.append("page_id", page_id.toLowerCase());
+
+    // Append any slugs or extra params (state_slug, district_slug, tehsil_slug, village_slug)
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         url.searchParams.append(key, value);
@@ -163,7 +162,10 @@ export async function getContent(page_id, params = {}) {
     });
 
     if (!res.ok)
-      return { error: `Failed: ${res.status}`, status: res.status };
+      return {
+        error: `Failed to fetch content: ${res.status}`,
+        status: res.status,
+      };
 
     return await res.json();
   } catch (error) {
@@ -172,11 +174,12 @@ export async function getContent(page_id, params = {}) {
   }
 }
 
-// saveContent stays same ✅
+// POST /api/content
 export async function saveContent(page_id, data = {}, params = {}) {
   try {
     const url = new URL(`${HOST}/api/content`);
 
+    // Parse blog_content string → JSON if needed
     let blog_content = data.blog_content ?? null;
     if (typeof blog_content === "string" && blog_content.trim()) {
       try {
@@ -186,6 +189,8 @@ export async function saveContent(page_id, data = {}, params = {}) {
       }
     }
 
+    // Resolve slug based on page_id or passed params
+    // Priority: explicit params > page_id inference
     const slugs = {
       ...(params.state_slug && { state_slug: params.state_slug }),
       ...(params.district_slug && { district_slug: params.district_slug }),
@@ -205,15 +210,19 @@ export async function saveContent(page_id, data = {}, params = {}) {
     });
 
     if (!res.ok)
-      return { error: `Failed: ${res.status}`, status: res.status };
+      return {
+        error: `Failed to save content: ${res.status}`,
+        status: res.status,
+      };
 
     return await res.json();
   } catch (error) {
     console.error("saveContent error:", error);
-    return { error: "Unexpected error" };
+    return { error: "Unexpected error while saving content" };
   }
 }
 
+// Formate Date
 export function formatDate(dateString) {
   return new Date(dateString).toLocaleDateString("en-US", {
     year: "numeric",
