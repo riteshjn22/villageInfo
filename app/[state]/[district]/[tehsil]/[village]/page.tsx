@@ -80,33 +80,41 @@ type Props = {
 // ────────────────────────────────────────────────────────────
 // Static params
 // ────────────────────────────────────────────────────────────
+// deepak start - old code (replaced below):
+// export async function generateStaticParams() {
+//   try {
+//     await connectDB();
+//
+//     const villages = await Village.find({})
+//       .select("village_slug state_slug district_slug tehsil_slug")
+//       .lean();
+//
+//     return villages
+//       .filter(
+//         (v) =>
+//           v?.state_slug &&
+//           v?.district_slug &&
+//           v?.tehsil_slug &&
+//           v?.village_slug,
+//       )
+//       .map((v) => ({
+//         state: v.state_slug,
+//         district: v.district_slug,
+//         tehsil: v.tehsil_slug,
+//         village: v.village_slug,
+//       }));
+//   } catch (error) {
+//     console.error("generateStaticParams error:", error);
+//     return [];
+//   }
+// }
+// deepak end - old code
+
+// deepak start - new code: skip build-time static generation entirely (avoids DB calls during build on the flaky free-tier cluster); pages are generated on-demand at request time instead (dynamicParams = true above)
 export async function generateStaticParams() {
-  try {
-    await connectDB();
-
-    const villages = await Village.find({})
-      .select("village_slug state_slug district_slug tehsil_slug")
-      .lean();
-
-    return villages
-      .filter(
-        (v) =>
-          v?.state_slug &&
-          v?.district_slug &&
-          v?.tehsil_slug &&
-          v?.village_slug,
-      )
-      .map((v) => ({
-        state: v.state_slug,
-        district: v.district_slug,
-        tehsil: v.tehsil_slug,
-        village: v.village_slug,
-      }));
-  } catch (error) {
-    console.error("generateStaticParams error:", error);
     return [];
-  }
 }
+// deepak end - new code
 
 // ────────────────────────────────────────────────────────────
 // Metadata
