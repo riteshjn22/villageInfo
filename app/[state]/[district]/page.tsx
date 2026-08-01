@@ -64,7 +64,30 @@ type TehsilItem = {
 
 // ─── Static Params ────────────────────────────────────────────────────────────
 export async function generateStaticParams() {
+    // deepak start - old code (replaced below):
+    // try {
+    //   await connectDB();
+    //
+    //   const districts = await District.find({})
+    //     .select("district_slug state_slug")
+    //     .lean();
+    //
+    //   return districts
+    //     .filter((d) => d?.state_slug && d?.district_slug)
+    //     .map((d) => ({
+    //       state: d.state_slug,
+    //       district: d.district_slug,
+    //     }));
+    // } catch (error) {
+    //   console.error("generateStaticParams error:", error);
+    //   return [];
+    // }
+    // deepak end - old code
+
+    // deepak start - new code: skip build-time static generation entirely,
+    // pages are generated on-demand at request time instead (dynamicParams = true)
     return [];
+    // deepak end - new code
 }
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
