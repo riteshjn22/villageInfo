@@ -15,14 +15,28 @@ function escapeXml(str: string): string {
 }
 
 export async function GET() {
-  const states = await getStates();
+    const states = await getStates();
 
-  const districtsByState = await Promise.all(
-    states.map((s: { state_slug: string }) =>
-      getDistricts({ state_slug: s.state_slug }),
-    ),
-  );
-  const districts = districtsByState.flat();
+    // deepak start - old code (replaced below):
+    // const districtsByState = await Promise.all(
+    //   states.map((s: { state_slug: string }) =>
+    //     getDistricts({ state_slug: s.state_slug }),
+    //   ),
+    // );
+    // const districts = districtsByState.flat();
+    // deepak end - old code
+
+    // deepak start - new code: guard against getStates()/getDistricts() returning
+    // a non-array error object (e.g. on transient DB failure) so the build doesn't crash
+    const statesList = Array.isArray(states) ? states : [];
+
+    const districtsByState = await Promise.all(
+          statesList.map((s: { state_slug: string }) =>
+                  getDistricts({ state_slug: s.state_slug }),
+                             ),
+        );
+    const districts = districtsByState.filter((d) => Array.isArray(d)).flat();
+    // deepak end - new code
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
