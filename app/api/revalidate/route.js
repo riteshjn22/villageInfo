@@ -1,3 +1,6 @@
+// deepak start - new file: this entire file is newly added (no old code to replace)
+// It exposes a secret-protected POST endpoint to batch-revalidate cache tags/paths on demand
+// deepak end - new file
 import { NextResponse } from "next/server";
 import { revalidateTag, revalidatePath } from "next/cache";
 
