@@ -11,9 +11,13 @@ export async function getStates(params = {}) {
       }
     });
 
-    const res = await fetch(url.toString(), {
-      next: { revalidate: REVALIDATE_TIME }, // revalidate every 24 hours
-    });
+    const stateTag = params.state_slug ? `state-${params.state_slug}` : null;
+        const res = await fetch(url.toString(), {
+                next: {
+                          revalidate: REVALIDATE_TIME,
+                          tags: ["states", stateTag].filter(Boolean),
+                },
+        });
 
     if (!res.ok)
       return {
@@ -45,9 +49,14 @@ export async function getDistricts(params = {}) {
       }
     });
 
-    const res = await fetch(url.toString(), {
-      next: { revalidate: REVALIDATE_TIME }, // revalidate every 24 hours
-    });
+    const districtTags = [
+            "districts",
+            params.state_slug ? `state-${params.state_slug}` : null,
+            params.district_slug ? `district-${params.district_slug}` : null,
+          ].filter(Boolean);
+        const res = await fetch(url.toString(), {
+                next: { revalidate: REVALIDATE_TIME, tags: districtTags },
+        });
 
     if (!res.ok)
       return {
@@ -157,9 +166,15 @@ export async function getContent(page_id, params = {}) {
       }
     });
 
-    const res = await fetch(url.toString(), {
-      next: { revalidate: REVALIDATE_TIME },
-    });
+    const contentTags = [
+            "content",
+            `content-${page_id.toLowerCase()}`,
+            params.state_slug ? `state-${params.state_slug}` : null,
+            params.district_slug ? `district-${params.district_slug}` : null,
+          ].filter(Boolean);
+        const res = await fetch(url.toString(), {
+                next: { revalidate: REVALIDATE_TIME, tags: contentTags },
+        });
 
     if (!res.ok)
       return {
