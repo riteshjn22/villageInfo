@@ -12,7 +12,7 @@ export default function BlogSection({ blogData }: { blogData: BlogItem[] }) {
     <div className="mt-4 w-full">
       <h2 className="mb-4 text-base font-medium">Blogs</h2>
       <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
-        {blogData?.map((item, index) => {
+        {Array.isArray(blogData) && blogData.map((item, index) => {
           return <BlogBody key={index} item={item} priority={index < 2} />;
         })}
       </div>
