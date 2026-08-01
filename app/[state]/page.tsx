@@ -51,18 +51,7 @@ type District = {
 
 // ─── Static Params ────────────────────────────────────────────────────────────
 export async function generateStaticParams() {
-  try {
-    await connectDB();
-
-    const states = await State.find({}).select("state_slug").lean();
-
-    return states
-      .filter((s) => s?.state_slug)
-      .map((s) => ({ state: s.state_slug }));
-  } catch (error) {
-    console.error("generateStaticParams error:", error);
     return [];
-  }
 }
 
 // ─── Metadata ────────────────────────────────────────────────────────────────
