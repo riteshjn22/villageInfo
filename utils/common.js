@@ -11,13 +11,21 @@ export async function getStates(params = {}) {
       }
     });
 
-    const stateTag = params.state_slug ? `state-${params.state_slug}` : null;
+        // deepak start - old code (replaced below):
+        // const res = await fetch(url.toString(), {
+        //   next: { revalidate: REVALIDATE_TIME }, // revalidate every 24 hours
+        // });
+        // deepak end - old code
+
+        // deepak start - new code: add cache tags so specific states can be revalidated on-demand
+        const stateTag = params.state_slug ? `state-${params.state_slug}` : null;
         const res = await fetch(url.toString(), {
                 next: {
                           revalidate: REVALIDATE_TIME,
                           tags: ["states", stateTag].filter(Boolean),
                 },
         });
+        // deepak end - new code
 
     if (!res.ok)
       return {
@@ -49,14 +57,22 @@ export async function getDistricts(params = {}) {
       }
     });
 
-    const districtTags = [
-            "districts",
-            params.state_slug ? `state-${params.state_slug}` : null,
-            params.district_slug ? `district-${params.district_slug}` : null,
-          ].filter(Boolean);
+    // deepak start - old code (replaced below):
+        // const res = await fetch(url.toString(), {
+        //   next: { revalidate: REVALIDATE_TIME }, // revalidate every 24 hours
+        // });
+        // deepak end - old code
+
+        // deepak start - new code: add cache tags so specific districts can be revalidated on-demand
+        const districtTags = [
+                "districts",
+                params.state_slug ? `state-${params.state_slug}` : null,
+                params.district_slug ? `district-${params.district_slug}` : null,
+              ].filter(Boolean);
         const res = await fetch(url.toString(), {
                 next: { revalidate: REVALIDATE_TIME, tags: districtTags },
         });
+        // deepak end - new code
 
     if (!res.ok)
       return {
@@ -166,15 +182,23 @@ export async function getContent(page_id, params = {}) {
       }
     });
 
-    const contentTags = [
-            "content",
-            `content-${page_id.toLowerCase()}`,
-            params.state_slug ? `state-${params.state_slug}` : null,
-            params.district_slug ? `district-${params.district_slug}` : null,
-          ].filter(Boolean);
+    // deepak start - old code (replaced below):
+        // const res = await fetch(url.toString(), {
+        //   next: { revalidate: REVALIDATE_TIME },
+        // });
+        // deepak end - old code
+
+        // deepak start - new code: add cache tags so specific content pages can be revalidated on-demand
+        const contentTags = [
+                "content",
+                `content-${page_id.toLowerCase()}`,
+                params.state_slug ? `state-${params.state_slug}` : null,
+                params.district_slug ? `district-${params.district_slug}` : null,
+              ].filter(Boolean);
         const res = await fetch(url.toString(), {
                 next: { revalidate: REVALIDATE_TIME, tags: contentTags },
         });
+        // deepak end - new code
 
     if (!res.ok)
       return {
