@@ -73,26 +73,34 @@ type VillageItem = {
 
 // ─── Static Params ────────────────────────────────────────────────────────────
 
+// deepak start - old code (replaced below):
+// export async function generateStaticParams() {
+//   try {
+//     await connectDB();
+//
+//     const tehsils = await Tehsil.find({})
+//       .select("tehsil_slug state_slug district_slug")
+//       .lean();
+//
+//     return tehsils
+//       .filter((t) => t?.state_slug && t?.district_slug && t?.tehsil_slug)
+//       .map((t) => ({
+//         state: t.state_slug,
+//         district: t.district_slug,
+//         tehsil: t.tehsil_slug,
+//       }));
+//   } catch (error) {
+//     console.error("generateStaticParams error:", error);
+//     return [];
+//   }
+// }
+// deepak end - old code
+
+// deepak start - new code: skip build-time static generation entirely (avoids DB calls during build on the flaky free-tier cluster); pages are generated on-demand at request time instead (dynamicParams = true above)
 export async function generateStaticParams() {
-  try {
-    await connectDB();
-
-    const tehsils = await Tehsil.find({})
-      .select("tehsil_slug state_slug district_slug")
-      .lean();
-
-    return tehsils
-      .filter((t) => t?.state_slug && t?.district_slug && t?.tehsil_slug)
-      .map((t) => ({
-        state: t.state_slug,
-        district: t.district_slug,
-        tehsil: t.tehsil_slug,
-      }));
-  } catch (error) {
-    console.error("generateStaticParams error:", error);
     return [];
-  }
 }
+// deepak end - new code
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 
