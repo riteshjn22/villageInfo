@@ -51,7 +51,25 @@ type District = {
 
 // ─── Static Params ────────────────────────────────────────────────────────────
 export async function generateStaticParams() {
+    // deepak start - old code (replaced below):
+    // try {
+    //   await connectDB();
+    //
+    //   const states = await State.find({}).select("state_slug").lean();
+    //
+    //   return states
+    //     .filter((s) => s?.state_slug)
+    //     .map((s) => ({ state: s.state_slug }));
+    // } catch (error) {
+    //   console.error("generateStaticParams error:", error);
+    //   return [];
+    // }
+    // deepak end - old code
+
+    // deepak start - new code: skip build-time static generation entirely,
+    // pages are generated on-demand at request time instead (dynamicParams = true)
     return [];
+    // deepak end - new code
 }
 
 // ─── Metadata ────────────────────────────────────────────────────────────────
