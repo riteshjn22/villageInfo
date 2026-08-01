@@ -68,19 +68,38 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
+// deepak start - old code (replaced below):
+  // const states = await getStates();
+  // const content = await getContent("home");
+  // return (
+  //   <main className="mx-auto flex w-full flex-wrap p-4 md:max-w-275">
+  //     {states.length === 0 ? (
+  //       <p>No states found.</p>
+  //     ) : (
+  //       <>
+  //         {content.top_content && (
+  //           <HtmlContent type="top" content={content.top_content} />
+  //         )}
+//         <div className="grid w-full grid-cols-2 gap-4 md:grid-cols-4">
+  //           {states.map(
+  // deepak end - old code
+
+  // deepak start - new code: guard against getStates() returning a non-array error object on DB failure (prevents build/prerender crash on "/")
   const states = await getStates();
+  const statesList = Array.isArray(states) ? states : [];
   const content = await getContent("home");
   return (
-    <main className="mx-auto flex w-full flex-wrap p-4 md:max-w-275">
-      {states.length === 0 ? (
-        <p>No states found.</p>
-      ) : (
-        <>
-          {content.top_content && (
-            <HtmlContent type="top" content={content.top_content} />
-          )}
-          <div className="grid w-full grid-cols-2 gap-4 md:grid-cols-4">
-            {states.map(
+      <main className="mx-auto flex w-full flex-wrap p-4 md:max-w-275">
+        {statesList.length === 0 ? (
+              <p>No states found.</p>
+            ) : (
+              <>
+                {content.top_content && (
+                          <HtmlContent type="top" content={content.top_content} />
+                        )}
+                      <div className="grid w-full grid-cols-2 gap-4 md:grid-cols-4">
+                        {statesList.map(
+                // deepak end - new code
               (state: { _id: string; state_slug: string; state: string }) => (
                 <Link
                   href={`/${state.state_slug}`}
