@@ -3,8 +3,8 @@ import { getVillages } from "@/utils/common";
 // deepak start - new code: escape XML special characters in slug values so a literal
 // "&" (e.g. the "north_&_middle_andaman" tehsil slug) doesn't produce invalid XML
 function escapeXml(str: string): string {
-    return str
-      .replace(/&/g, "&amp;")
+if (str == null) return "";
+      return String(str).replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
