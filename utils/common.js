@@ -106,9 +106,23 @@ export async function getTehsils(params = {}) {
       }
     });
 
-    const res = await fetch(url.toString(), {
-      next: { revalidate: REVALIDATE_TIME }, // revalidate every 24 hours
-    });
+// deepak start - old code (replaced below):
+        // const res = await fetch(url.toString(), {
+        //   next: { revalidate: REVALIDATE_TIME }, // revalidate every 24 hours
+        // });
+        // deepak end - old code
+
+        // deepak start - new code: add cache tags so specific tehsils can be revalidated on-demand
+        const tehsilTags = [
+                "tehsils",
+                params.state_slug ? `state-${params.state_slug}` : null,
+                params.district_slug ? `district-${params.district_slug}` : null,
+                params.block_slug ? `tehsil-${params.block_slug}` : null,
+              ].filter(Boolean);
+        const res = await fetch(url.toString(), {
+                next: { revalidate: REVALIDATE_TIME, tags: tehsilTags },
+        });
+        // deepak end - new code
 
     if (!res.ok)
       return {
@@ -142,9 +156,24 @@ export async function getVillages(params = {}) {
       }
     });
 
-    const res = await fetch(url.toString(), {
-      next: { revalidate: REVALIDATE_TIME }, // revalidate every 24 hours
-    });
+// deepak start - old code (replaced below):
+        // const res = await fetch(url.toString(), {
+        //   next: { revalidate: REVALIDATE_TIME }, // revalidate every 24 hours
+        // });
+        // deepak end - old code
+
+        // deepak start - new code: add cache tags so specific villages can be revalidated on-demand
+        const villageTags = [
+                "villages",
+                params.state_slug ? `state-${params.state_slug}` : null,
+                params.district_slug ? `district-${params.district_slug}` : null,
+                params.block_slug ? `tehsil-${params.block_slug}` : null,
+                params.village_slug ? `village-${params.village_slug}` : null,
+              ].filter(Boolean);
+        const res = await fetch(url.toString(), {
+                next: { revalidate: REVALIDATE_TIME, tags: villageTags },
+        });
+        // deepak end - new code
 
     if (!res.ok)
       return {
