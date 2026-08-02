@@ -11,8 +11,15 @@ interface State {
 }
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const states = await getStates();
-  const stateUrls: MetadataRoute.Sitemap = states.map((state: State) => ({
-    url: `${HOST}/${state?.state_slug}`,
+// deepak start - old code (replaced below):
+      // const stateUrls: MetadataRoute.Sitemap = states.map((state: State) => ({
+      // deepak end - old code
+      // deepak start - new code: guard against getStates() returning a non-array
+      // error object (e.g. on transient DB failure) so the build doesn't crash
+      const statesList = Array.isArray(states) ? states : [];
+      const stateUrls: MetadataRoute.Sitemap = statesList.map((state: State) => ({
+            // deepak end - new code
+        url: `${HOST}/${state?.state_slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly",
     priority: 1.0,
