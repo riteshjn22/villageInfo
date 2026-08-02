@@ -11,7 +11,15 @@ function toLocalUrl(url: string | undefined): string {
       ? new URL(process.env.NEXT_PUBLIC_WP_URL).origin
       : null;
     if (wpOrigin && parsed.origin === wpOrigin) {
-      return `${HOST}/blog${parsed.pathname}${parsed.search}${parsed.hash}`;
+            // deepak start - old code (replaced below):
+            // return `${HOST}/blog${parsed.pathname}${parsed.search}${parsed.hash}`;
+            // deepak end - old code
+            // deepak start - new code: avoid double "/blog" prefix when WP pathname already starts with /blog (e.g. post permalinks)
+            const path = parsed.pathname.startsWith("/blog/") || parsed.pathname === "/blog"
+              ? parsed.pathname
+                      : `/blog${parsed.pathname}`;
+            return `${HOST}${path}${parsed.search}${parsed.hash}`;
+            // deepak end - new code
     }
   } catch {
     // relative URL or invalid — return as-is
