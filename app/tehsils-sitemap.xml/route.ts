@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 // deepak start - new code: escape XML special characters in slug values so a literal
 // "&" (e.g. the "north_&_middle_andaman" tehsil slug) doesn't produce invalid XML
 function escapeXml(str: string): string {
-      return str
-        .replace(/&/g, "&amp;")
+if (str == null) return "";
+          return String(str).replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
@@ -54,7 +54,8 @@ export async function GET() {
     const tehsils = tehsilsByDistrict.filter((t) => Array.isArray(t)).flat();
     // deepak end - new code
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    // deepak: slug values below are wrapped in escapeXml() to prevent invalid XML
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${tehsils
   .map(
@@ -63,12 +64,7 @@ ${tehsils
       district_slug: string;
       tehsil_slug: string;
     }) => `  <url>
-// deepak start - old code (replaced below):
-    // <loc>${HOST}/${t.state_slug}/${t.district_slug}/${t.tehsil_slug}</loc>
-        // deepak end - old code
-            // deepak start - new code: escape slug values to keep XML valid
                 <loc>${HOST}/${escapeXml(t.state_slug)}/${escapeXml(t.district_slug)}/${escapeXml(t.tehsil_slug)}</loc>
-// deepak end - new code
 <lastmod>${new Date().toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
