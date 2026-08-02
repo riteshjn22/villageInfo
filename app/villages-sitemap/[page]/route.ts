@@ -22,17 +22,13 @@ export async function GET(
   const page = parseInt(pageParam) - 1;
 
   const villages = await getVillages({ pageIndex: page });
-
+  // deepak: slug values below are wrapped in escapeXml() to prevent invalid XML
+    
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   ${villages.map((v: any) => `
   <url>
-// deepak start - old code (replaced below):
-    // <loc>${HOST}/${v.state_slug}/${v.district_slug}/${v.tehsil_slug}/${v.village_slug}</loc>
-        // deepak end - old code
-            // deepak start - new code: escape slug values to keep XML valid
                 <loc>${HOST}/${escapeXml(v.state_slug)}/${escapeXml(v.district_slug)}/${escapeXml(v.tehsil_slug)}/${escapeXml(v.village_slug)}</loc>
-                    // deepak end - new code
                     <lastmod>${new Date(v.updatedAt).toISOString().split("T")[0]}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
