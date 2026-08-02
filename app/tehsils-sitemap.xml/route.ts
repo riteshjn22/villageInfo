@@ -1,6 +1,17 @@
 import { HOST } from "@/lib/constants/constants";
 import { getStates, getDistricts, getTehsils } from "@/utils/common";
 import { NextResponse } from "next/server";
+// deepak start - new code: escape XML special characters in slug values so a literal
+// "&" (e.g. the "north_&_middle_andaman" tehsil slug) doesn't produce invalid XML
+function escapeXml(str: string): string {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
+}
+// deepak end - new code
 
 export const revalidate = 3600;
 
@@ -52,8 +63,13 @@ ${tehsils
       district_slug: string;
       tehsil_slug: string;
     }) => `  <url>
-    <loc>${HOST}/${t.state_slug}/${t.district_slug}/${t.tehsil_slug}</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
+// deepak start - old code (replaced below):
+    // <loc>${HOST}/${t.state_slug}/${t.district_slug}/${t.tehsil_slug}</loc>
+        // deepak end - old code
+            // deepak start - new code: escape slug values to keep XML valid
+                <loc>${HOST}/${escapeXml(t.state_slug)}/${escapeXml(t.district_slug)}/${escapeXml(t.tehsil_slug)}</loc>
+// deepak end - new code
+<lastmod>${new Date().toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`,
