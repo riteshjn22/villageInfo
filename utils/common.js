@@ -298,3 +298,88 @@ export function formatDate(dateString) {
     day: "numeric",
   });
 }
+
+// deepak start - new code: Hindu Population feature helpers
+// Mirror getStates/getDistricts above but point at the dedicated
+// /api/hindu-population/* endpoints, kept separate from the main dataset.
+export async function getHinduPopulationStates(params = {}) {
+  try {
+    const url = new URL(`${HOST}/api/hindu-population/states`);
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        url.searchParams.append(key, value);
+      }
+    });
+
+    const stateTag = params.state_slug
+      ? `hindu-population-state-${params.state_slug}`
+      : null;
+
+    const res = await fetch(url.toString(), {
+      next: {
+        revalidate: REVALIDATE_TIME,
+        tags: ["hindu-population-states", stateTag].filter(Boolean),
+      },
+    });
+
+    if (!res.ok)
+      return {
+        error: `Failed to fetch hindu population states: ${res.status}`,
+        status: res.status,
+      };
+
+    const data = await res.json();
+
+    if (data?.allStates) {
+      return data.allStates;
+    } else {
+      return data;
+    }
+  } catch (error) {
+    console.error("getHinduPopulationStates error:", error);
+    return [];
+  }
+}
+
+export async function getHinduPopulationDistricts(params = {}) {
+  try {
+    const url = new URL(`${HOST}/api/hindu-population/districts`);
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        url.searchParams.append(key, value);
+      }
+    });
+
+    const districtTags = [
+      "hindu-population-districts",
+      params.state_slug ? `hindu-population-state-${params.state_slug}` : null,
+      params.state_slug && params.district_slug
+        ? `hindu-population-district-${params.district_slug}`
+        : null,
+    ].filter(Boolean);
+
+    const res = await fetch(url.toString(), {
+      next: { revalidate: REVALIDATE_TIME, tags: districtTags },
+    });
+
+    if (!res.ok)
+      return {
+        error: `Failed to fetch hindu population districts: ${res.status}`,
+        status: res.status,
+      };
+
+    const data = await res.json();
+
+    if (data?.allDistricts) {
+      return data.allDistricts;
+    } else {
+      return data;
+    }
+  } catch (error) {
+    console.error("getHinduPopulationDistricts error:", error);
+    return [];
+  }
+}
+// deepak end - new code
