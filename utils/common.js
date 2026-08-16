@@ -1,4 +1,4 @@
-import { REVALIDATE_TIME, HOST } from "@/lib/constants/constants";
+import { REVALIDATE_TIME, HOST, VERCEL_BYPASS_HEADERS } from "@/lib/constants/constants";
 
 export async function getStates(params = {}) {
   try {
@@ -20,6 +20,7 @@ export async function getStates(params = {}) {
         // deepak start - new code: add cache tags so specific states can be revalidated on-demand
         const stateTag = params.state_slug ? `state-${params.state_slug}` : null;
         const res = await fetch(url.toString(), {
+                headers: VERCEL_BYPASS_HEADERS,
                 next: {
                           revalidate: REVALIDATE_TIME,
                           tags: ["states", stateTag].filter(Boolean),
@@ -70,6 +71,7 @@ export async function getDistricts(params = {}) {
                 params.district_slug ? `district-${params.district_slug}` : null,
               ].filter(Boolean);
         const res = await fetch(url.toString(), {
+                headers: VERCEL_BYPASS_HEADERS,
                 next: { revalidate: REVALIDATE_TIME, tags: districtTags },
         });
         // deepak end - new code
@@ -120,6 +122,7 @@ export async function getTehsils(params = {}) {
                 params.block_slug ? `tehsil-${params.block_slug}` : null,
               ].filter(Boolean);
         const res = await fetch(url.toString(), {
+                headers: VERCEL_BYPASS_HEADERS,
                 next: { revalidate: REVALIDATE_TIME, tags: tehsilTags },
         });
         // deepak end - new code
@@ -171,6 +174,7 @@ export async function getVillages(params = {}) {
                 params.village_slug ? `village-${params.village_slug}` : null,
               ].filter(Boolean);
         const res = await fetch(url.toString(), {
+                headers: VERCEL_BYPASS_HEADERS,
                 next: { revalidate: REVALIDATE_TIME, tags: villageTags },
         });
         // deepak end - new code
@@ -225,6 +229,7 @@ export async function getContent(page_id, params = {}) {
                 params.district_slug ? `district-${params.district_slug}` : null,
               ].filter(Boolean);
         const res = await fetch(url.toString(), {
+                headers: VERCEL_BYPASS_HEADERS,
                 next: { revalidate: REVALIDATE_TIME, tags: contentTags },
         });
         // deepak end - new code
@@ -268,7 +273,7 @@ export async function saveContent(page_id, data = {}, params = {}) {
 
     const res = await fetch(url.toString(), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...VERCEL_BYPASS_HEADERS },
       body: JSON.stringify({
         page_id: page_id.toLowerCase(),
         ...slugs,
@@ -317,6 +322,7 @@ export async function getHinduPopulationStates(params = {}) {
       : null;
 
     const res = await fetch(url.toString(), {
+      headers: VERCEL_BYPASS_HEADERS,
       next: {
         revalidate: REVALIDATE_TIME,
         tags: ["hindu-population-states", stateTag].filter(Boolean),
@@ -361,6 +367,7 @@ export async function getHinduPopulationDistricts(params = {}) {
     ].filter(Boolean);
 
     const res = await fetch(url.toString(), {
+      headers: VERCEL_BYPASS_HEADERS,
       next: { revalidate: REVALIDATE_TIME, tags: districtTags },
     });
 
@@ -410,6 +417,7 @@ export async function getHinduPopulationContent(page_id, params = {}) {
     ].filter(Boolean);
 
     const res = await fetch(url.toString(), {
+      headers: VERCEL_BYPASS_HEADERS,
       next: { revalidate: REVALIDATE_TIME, tags: contentTags },
     });
 
@@ -453,7 +461,7 @@ export async function saveHinduPopulationContent(
 
     const res = await fetch(url.toString(), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...VERCEL_BYPASS_HEADERS },
       body: JSON.stringify({
         page_id: page_id.toLowerCase(),
         ...slugs,
