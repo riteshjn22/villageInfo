@@ -19,6 +19,22 @@ function LeftSideBar() {
           </Link>
         </li>
       </ul>
+
+      {/* deepak start - new section: Hindu Population feature nav, kept
+          separate from the sections above so the existing Content /
+          Upload Data workflow is untouched */}
+      <h2 className="mt-4 text-lg font-semibold">Hindu Population</h2>
+      <ul className="mt-2">
+        <li className="mb-1">
+          <Link
+            href="/dashboard/hindu-population"
+            className="text-blue-600 hover:underline"
+          >
+            Upload / Download
+          </Link>
+        </li>
+      </ul>
+      {/* deepak end - new section */}
     </div>
   );
 }
