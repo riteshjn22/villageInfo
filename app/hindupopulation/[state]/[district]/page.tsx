@@ -6,8 +6,16 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { cache } from "react";
-import { getHinduPopulationDistricts } from "@/utils/common";
+import {
+  getHinduPopulationDistricts,
+  getHinduPopulationContent,
+} from "@/utils/common";
 import { HOST } from "@/lib/constants/constants";
+// deepak start - new code: optional managed content (title/description/top/
+// bottom/blog) from the Hindu Population admin Content tab
+import HtmlContent from "@/components/htmlContent";
+import BlogSection from "@/components/BlogSection";
+// deepak end - new code
 
 export const revalidate = false;
 export const dynamicParams = true;
@@ -15,6 +23,14 @@ export const dynamicParams = true;
 const getCachedDistrict = cache((state: string, district: string) =>
   getHinduPopulationDistricts({ state_slug: state, district_slug: district }),
 );
+// deepak start - new code: cached content fetch for this district page
+const getCachedDistrictContent = cache((state: string, district: string) =>
+  getHinduPopulationContent("district", {
+    state_slug: state,
+    district_slug: district,
+  }),
+);
+// deepak end - new code
 
 type Props = {
   params: Promise<{ state: string; district: string }>;
@@ -50,11 +66,17 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state, district } = await params;
   const data = (await getCachedDistrict(state, district)) as DistrictData;
+  // deepak start - new code: managed content can override the SEO title/description
+  const content = await getCachedDistrictContent(state, district);
+  const hasContent = content && !content.error;
+  // deepak end - new code
 
   const title =
+    (hasContent && content.title) ||
     data?.seo_title ||
     `Hindu Population in ${data?.district ?? district}, ${data?.state ?? state} – Hindu Sex Ratio`;
   const description =
+    (hasContent && content.description) ||
     data?.seo_description ||
     `Hindu population, Hindu population percentage and Hindu sex ratio data for ${data?.district ?? district}, ${data?.state ?? state}.`;
 
@@ -72,9 +94,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function HinduPopulationDistrictPage({ params }: Props) {
   const { state, district } = await params;
-  const data = (await getCachedDistrict(state, district)) as DistrictData;
+  const [data, content] = await Promise.all([
+    getCachedDistrict(state, district) as Promise<DistrictData>,
+    getCachedDistrictContent(state, district),
+  ]);
 
   if (!data || data?.status === 404) notFound();
+  // deepak start - new code: managed content for this district page
+  const hasContent = content && !content.error;
+  // deepak end - new code
 
   const {
     district: districtName,
@@ -227,6 +255,15 @@ export default async function HinduPopulationDistrictPage({ params }: Props) {
               <div className="vp-source-note">
                 ℹ️ Source: Census of India — Census {census_year}
               </div>
+              {/* deepak start - new code: managed top_content, rendered under the intro */}
+              {hasContent && content.top_content && (
+                <HtmlContent
+                  type="top"
+                  content={content.top_content}
+                  customClass="mb-0 mt-3"
+                />
+              )}
+              {/* deepak end - new code */}
             </div>
 
             <div className="vp-snapshot">
@@ -411,6 +448,15 @@ export default async function HinduPopulationDistrictPage({ params }: Props) {
                   </div>
                 </div>
               </div>
+
+              {/* deepak start - new code: managed blog + bottom content */}
+              {hasContent && content.blog_content && (
+                <BlogSection blogData={content.blog_content} />
+              )}
+              {hasContent && content.bottom_content && (
+                <HtmlContent type="bottom" content={content.bottom_content} />
+              )}
+              {/* deepak end - new code */}
             </div>
           </main>
 
