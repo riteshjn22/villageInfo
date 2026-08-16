@@ -15,7 +15,7 @@ export async function GET(req) {
     const state_slug = searchParams.get("state_slug");
     const district_slug = searchParams.get("district_slug");
 
-    // "all=true" (download tool) → every record, every field
+    // "all=true" (download tool) â every record, every field
     if (searchParams.get("all") === "true") {
       const districts = await HinduPopulationDistrict.find()
         .sort({ state: 1, district: 1 })
@@ -26,13 +26,13 @@ export async function GET(req) {
       );
     }
 
-    // ── Case 0: No slugs → used by generateStaticParams ──────────────────────
+    // ââ Case 0: No slugs â used by generateStaticParams ââââââââââââââââââââââ
     if (!state_slug && !district_slug) {
       const totalDistricts = await HinduPopulationDistrict.countDocuments();
       return NextResponse.json({ totalDistricts }, { status: 200 });
     }
 
-    // ── Case 1: Both slugs → single district detail ───────────────────────────
+    // ââ Case 1: Both slugs â single district detail âââââââââââââââââââââââââââ
     if (state_slug && district_slug) {
       const district = await HinduPopulationDistrict.findOne({
         state_slug,
@@ -52,7 +52,7 @@ export async function GET(req) {
       });
     }
 
-    // ── Case 2: state + limit → top N sorted ─────────────────────────────────
+    // ââ Case 2: state + limit â top N sorted âââââââââââââââââââââââââââââââââ
     if (state_slug && searchParams.get("limit")) {
       const limit = parseInt(searchParams.get("limit"));
 
@@ -68,7 +68,7 @@ export async function GET(req) {
       );
     }
 
-    // ── Case 3: state only → all districts for that state ───────────────────
+    // ââ Case 3: state only â all districts for that state âââââââââââââââââââ
     if (state_slug) {
       const districts = await HinduPopulationDistrict.find({ state_slug })
         .sort({ district: 1 })
@@ -116,6 +116,23 @@ export async function POST(req) {
       }
     });
 
+    // deepak start - new code: pre-check whether this state_slug +
+    // district_slug combination already exists BEFORE the upsert, so the
+    // dashboard uploader can distinguish a brand-new insert from an update
+    // to an existing district row (used to drive the "Updated"
+    // counter/log status in the Upload Log UI). The same district_slug is
+    // allowed to repeat across different states - only an exact
+    // state_slug + district_slug match counts as an existing record,
+    // matching the compound unique index on the schema.
+    const existingDistrict = await HinduPopulationDistrict.findOne({
+      state_slug: body.state_slug,
+      district_slug: body.district_slug,
+    })
+      .select("_id")
+      .lean();
+    const wasUpdate = Boolean(existingDistrict);
+    // deepak end - new code
+
     const district = await HinduPopulationDistrict.findOneAndUpdate(
       { state_slug: body.state_slug, district_slug: body.district_slug },
       { $set: body },
@@ -127,7 +144,7 @@ export async function POST(req) {
       },
     );
 
-    // ── Targeted cache invalidation ───────────────────────────────────────────
+    // ââ Targeted cache invalidation âââââââââââââââââââââââââââââââââââââââââââ
     const { state_slug, district_slug } = body;
 
     if (state_slug && district_slug) {
@@ -135,7 +152,15 @@ export async function POST(req) {
       revalidatePath(`/hindupopulation/${state_slug}`);
     }
 
-    return NextResponse.json(district, { status: 201 });
+    // deepak start - new code: surface wasUpdate to the caller (dashboard
+    // uploader) without changing the shape of the persisted document.
+    const responseBody =
+      district && typeof district.toObject === "function"
+        ? { ...district.toObject(), __wasUpdate: wasUpdate }
+        : { ...district, __wasUpdate: wasUpdate };
+    // deepak end - new code
+
+    return NextResponse.json(responseBody, { status: 201 });
   } catch (error) {
     console.error("POST /api/hindu-population/districts error:", error);
 
