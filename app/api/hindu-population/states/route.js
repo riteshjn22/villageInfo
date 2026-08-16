@@ -23,7 +23,7 @@ export async function GET(req) {
         else if (key !== "all") filter[key] = value;
       });
 
-      // limit with no other filters → top N states (name + slug only)
+      // limit with no other filters â top N states (name + slug only)
       if (limit && Object.keys(filter).length === 0) {
         const states = await HinduPopulationState.find()
           .sort({ state: 1 })
@@ -37,7 +37,7 @@ export async function GET(req) {
         );
       }
 
-      // "all=true" (download tool) → every record, every field
+      // "all=true" (download tool) â every record, every field
       if (searchParams.get("all") === "true") {
         const states = await HinduPopulationState.find().sort({ state: 1 }).lean();
         return NextResponse.json(
@@ -46,7 +46,7 @@ export async function GET(req) {
         );
       }
 
-      // filter provided → single state detail
+      // filter provided â single state detail
       const state = await HinduPopulationState.findOne(filter).lean();
 
       if (!state) {
@@ -55,7 +55,7 @@ export async function GET(req) {
 
       return NextResponse.json(state, { status: 200, headers: CACHE_HEADERS });
     } else {
-      // No params → all states (list / generateStaticParams)
+      // No params â all states (list / generateStaticParams)
       const states = await HinduPopulationState.find()
         .sort({ state: 1 })
         .select("state state_slug")
@@ -95,6 +95,18 @@ export async function POST(req) {
       }
     });
 
+    // deepak start - new code: pre-check whether this state_id already
+    // exists BEFORE the upsert, so the dashboard uploader can distinguish
+    // a brand-new insert from an update to an existing state row (used to
+    // drive the "Updated" counter/log status in the Upload Log UI).
+    const existingState = await HinduPopulationState.findOne({
+      state_id: body.state_id,
+    })
+      .select("_id")
+      .lean();
+    const wasUpdate = Boolean(existingState);
+    // deepak end - new code
+
     const state = await HinduPopulationState.findOneAndUpdate(
       { state_id: body.state_id },
       { $set: body },
@@ -106,7 +118,7 @@ export async function POST(req) {
       },
     );
 
-    // ── Targeted cache invalidation ──────────────────────────────────────────
+    // ââ Targeted cache invalidation ââââââââââââââââââââââââââââââââââââââââââ
     const { state_slug } = body;
 
     if (state_slug) {
@@ -114,7 +126,15 @@ export async function POST(req) {
       revalidatePath("/hindupopulation");
     }
 
-    return NextResponse.json(state, { status: 201 });
+    // deepak start - new code: surface wasUpdate to the caller (dashboard
+    // uploader) without changing the shape of the persisted document.
+    const responseBody =
+      state && typeof state.toObject === "function"
+        ? { ...state.toObject(), __wasUpdate: wasUpdate }
+        : { ...state, __wasUpdate: wasUpdate };
+    // deepak end - new code
+
+    return NextResponse.json(responseBody, { status: 201 });
   } catch (error) {
     console.error("POST /api/hindu-population/states error:", error);
 
