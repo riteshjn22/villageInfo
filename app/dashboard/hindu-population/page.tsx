@@ -7,6 +7,10 @@
 // the existing States/Districts/Tehsils/Villages uploader.
 import { useState } from "react";
 import * as XLSX from "xlsx";
+// deepak start - new code: Content tab (manage page wording for
+// home/state/district), separate from the Excel upload/download tabs above.
+import HinduPopulationContentPage from "@/components/dashboard/hinduPopulationContent";
+// deepak end - new code
 
 type UploadStats = {
   total: number;
@@ -103,9 +107,9 @@ export default function HinduPopulationUploadPage() {
   const [apiEndpoint, setApiEndpoint] = useState(
     "/api/hindu-population/states",
   );
-  const [activeTab, setActiveTab] = useState<"upload" | "download">(
-    "upload",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "upload" | "download" | "content"
+  >("upload");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -282,15 +286,19 @@ export default function HinduPopulationUploadPage() {
 
   return (
     <div className="min-h-screen w-full bg-gray-50 px-4 py-8">
-      <div className="mx-auto max-w-4xl">
+      {/* deepak: widen the container on the Content tab — the content form
+          needs more room than the narrow upload/download card */}
+      <div
+        className={activeTab === "content" ? "mx-auto max-w-5xl" : "mx-auto max-w-4xl"}
+      >
         <div className="overflow-hidden rounded-2xl bg-white shadow-lg">
           <div className="bg-linear-to-r from-orange-600 to-orange-700 px-8 py-6">
             <h1 className="text-2xl font-bold text-white">
               Hindu Population Data Manager
             </h1>
             <p className="mt-1 text-sm text-orange-100">
-              Upload & download Hindu Population Excel data. Separate from
-              the main States/Districts dataset.
+              Upload & download Hindu Population Excel data, and manage page
+              content. Separate from the main States/Districts dataset.
             </p>
           </div>
 
@@ -315,6 +323,18 @@ export default function HinduPopulationUploadPage() {
             >
               ⬇️ Download Excel
             </button>
+            {/* deepak start - new code: Content tab button */}
+            <button
+              onClick={() => setActiveTab("content")}
+              className={`flex-1 py-4 text-sm font-semibold transition-colors ${
+                activeTab === "content"
+                  ? "border-b-2 border-orange-600 bg-orange-50 text-orange-600"
+                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+              }`}
+            >
+              📝 Content
+            </button>
+            {/* deepak end - new code */}
           </div>
 
           <div className="p-8">
@@ -480,7 +500,7 @@ export default function HinduPopulationUploadPage() {
                           ? "cursor-wait border-orange-300 bg-orange-50"
                           : downloading !== null
                             ? "cursor-not-allowed border-gray-200 bg-gray-50 opacity-60"
-                            : "cursor-pointer border-gray-200 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md"
+                            : "cursor-pointer border-gray-200 hover:border-orange-400 hover:bz-orange-50 hover:shadow-md"
                       }`}
                     >
                       <div>
@@ -509,6 +529,10 @@ export default function HinduPopulationUploadPage() {
                 </div>
               </div>
             )}
+
+            {/* deepak start - new code: Content tab panel */}
+            {activeTab === "content" && <HinduPopulationContentPage />}
+            {/* deepak end - new code */}
           </div>
         </div>
       </div>
