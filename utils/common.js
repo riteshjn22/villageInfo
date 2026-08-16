@@ -383,3 +383,95 @@ export async function getHinduPopulationDistricts(params = {}) {
   }
 }
 // deepak end - new code
+
+// deepak start - new code: Hindu Population feature content helpers
+// Mirror getContent/saveContent above but point at the dedicated
+// /api/hindu-population/content endpoint, kept separate from the main
+// site's Content collection. Scoped to home/state/district only.
+export async function getHinduPopulationContent(page_id, params = {}) {
+  try {
+    const url = new URL(`${HOST}/api/hindu-population/content`);
+
+    url.searchParams.append("page_id", page_id.toLowerCase());
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        url.searchParams.append(key, value);
+      }
+    });
+
+    const contentTags = [
+      "hindu-population-content",
+      `hindu-population-content-${page_id.toLowerCase()}`,
+      params.state_slug ? `hindu-population-state-${params.state_slug}` : null,
+      params.district_slug
+        ? `hindu-population-district-${params.district_slug}`
+        : null,
+    ].filter(Boolean);
+
+    const res = await fetch(url.toString(), {
+      next: { revalidate: REVALIDATE_TIME, tags: contentTags },
+    });
+
+    if (!res.ok)
+      return {
+        error: `Failed to fetch hindu population content: ${res.status}`,
+        status: res.status,
+      };
+
+    return await res.json();
+  } catch (error) {
+    console.error("getHinduPopulationContent error:", error);
+    return null;
+  }
+}
+
+// POST /api/hindu-population/content
+export async function saveHinduPopulationContent(
+  page_id,
+  data = {},
+  params = {},
+) {
+  try {
+    const url = new URL(`${HOST}/api/hindu-population/content`);
+
+    // Parse blog_content string → JSON if needed
+    let blog_content = data.blog_content ?? null;
+    if (typeof blog_content === "string" && blog_content.trim()) {
+      try {
+        blog_content = JSON.parse(blog_content);
+      } catch {
+        return { error: "Invalid JSON in blog_content" };
+      }
+    }
+
+    // Resolve slugs based on explicit params
+    const slugs = {
+      ...(params.state_slug && { state_slug: params.state_slug }),
+      ...(params.district_slug && { district_slug: params.district_slug }),
+    };
+
+    const res = await fetch(url.toString(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        page_id: page_id.toLowerCase(),
+        ...slugs,
+        ...data,
+        blog_content,
+      }),
+    });
+
+    if (!res.ok)
+      return {
+        error: `Failed to save hindu population content: ${res.status}`,
+        status: res.status,
+      };
+
+    return await res.json();
+  } catch (error) {
+    console.error("saveHinduPopulationContent error:", error);
+    return { error: "Unexpected error while saving content" };
+  }
+}
+// deepak end - new code
