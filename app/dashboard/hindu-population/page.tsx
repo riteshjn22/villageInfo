@@ -15,6 +15,7 @@ import HinduPopulationContentPage from "@/components/dashboard/hinduPopulationCo
 type UploadStats = {
   total: number;
   success: number;
+  updated: number;
   failed: number;
   skipped: number;
 };
@@ -22,7 +23,7 @@ type UploadStats = {
 type LogEntry = {
   index: number;
   name: string;
-  status: "success" | "error" | "skipped";
+  status: "success" | "updated" | "error" | "skipped";
   message: string;
 };
 
@@ -75,27 +76,27 @@ const SCHEMA_FIELDS: Record<string, string[]> = {
 };
 
 const ENDPOINTS = [
-  { label: "Hindu Population — States", value: "/api/hindu-population/states" },
+  { label: "Hindu Population â States", value: "/api/hindu-population/states" },
   {
-    label: "Hindu Population — Districts",
+    label: "Hindu Population â Districts",
     value: "/api/hindu-population/districts",
   },
 ];
 
 const DOWNLOAD_ENDPOINTS = [
   {
-    label: "Hindu Population — States",
+    label: "Hindu Population â States",
     value: "/api/hindu-population/states",
   },
   {
-    label: "Hindu Population — Districts",
+    label: "Hindu Population â Districts",
     value: "/api/hindu-population/districts",
   },
 ];
 
 const ENDPOINT_LABELS: Record<string, string> = {
-  "/api/hindu-population/states": "Hindu Population — States",
-  "/api/hindu-population/districts": "Hindu Population — Districts",
+  "/api/hindu-population/states": "Hindu Population â States",
+  "/api/hindu-population/districts": "Hindu Population â Districts",
 };
 
 export default function HinduPopulationUploadPage() {
@@ -170,7 +171,7 @@ export default function HinduPopulationUploadPage() {
   const handleUpload = async () => {
     if (!file) return;
     setUploading(true);
-    setStats({ total: 0, success: 0, failed: 0, skipped: 0 });
+    setStats({ total: 0, success: 0, updated: 0, failed: 0, skipped: 0 });
     setLogs([]);
 
     try {
@@ -194,7 +195,7 @@ export default function HinduPopulationUploadPage() {
 
       if (unknownColumns.length > 0) {
         const proceed = window.confirm(
-          `⚠️ Unknown columns detected:\n\n${unknownColumns.join(", ")}\n\nThese will be filtered out. Continue?`,
+          `â ï¸ Unknown columns detected:\n\n${unknownColumns.join(", ")}\n\nThese will be filtered out. Continue?`,
         );
         if (!proceed) {
           setUploading(false);
@@ -204,6 +205,7 @@ export default function HinduPopulationUploadPage() {
 
       const total = jsonData.length;
       let success = 0,
+        updatedCount = 0,
         failed = 0,
         skipped = 0;
       const newLogs: LogEntry[] = [];
@@ -230,13 +232,30 @@ export default function HinduPopulationUploadPage() {
           });
 
           if (response.ok) {
-            success++;
-            newLogs.push({
-              index: i + 2,
-              name: rowName,
-              status: "success",
-              message: "Inserted successfully",
-            });
+            // deepak start - new code: the API pre-checks whether this
+            // state_slug/district_slug (or state_id) already existed
+            // before upserting, and returns that as __wasUpdate. Log and
+            // count "Updated" separately from a true new-insert "Success"
+            // so the Upload Log accurately reflects what happened.
+            const responseData = await response.json();
+            if (responseData?.__wasUpdate) {
+              updatedCount++;
+              newLogs.push({
+                index: i + 2,
+                name: rowName,
+                status: "updated",
+                message: "Updated existing record",
+              });
+            } else {
+              success++;
+              newLogs.push({
+                index: i + 2,
+                name: rowName,
+                status: "success",
+                message: "Inserted successfully",
+              });
+            }
+            // deepak end - new code
           } else {
             const errorData = await response.json();
             if (response.status === 409) {
@@ -272,7 +291,7 @@ export default function HinduPopulationUploadPage() {
           });
         }
 
-        setStats({ total, success, failed, skipped });
+        setStats({ total, success, updated: updatedCount, failed, skipped });
         setLogs([...newLogs]);
       }
     } catch (error) {
@@ -286,7 +305,7 @@ export default function HinduPopulationUploadPage() {
 
   return (
     <div className="min-h-screen w-full bg-gray-50 px-4 py-8">
-      {/* deepak: widen the container on the Content tab — the content form
+      {/* deepak: widen the container on the Content tab â the content form
           needs more room than the narrow upload/download card */}
       <div
         className={activeTab === "content" ? "mx-auto max-w-5xl" : "mx-auto max-w-4xl"}
@@ -311,7 +330,7 @@ export default function HinduPopulationUploadPage() {
                   : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
               }`}
             >
-              ⬆️ Upload Excel
+              â¬ï¸ Upload Excel
             </button>
             <button
               onClick={() => setActiveTab("download")}
@@ -321,7 +340,7 @@ export default function HinduPopulationUploadPage() {
                   : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
               }`}
             >
-              ⬇️ Download Excel
+              â¬ï¸ Download Excel
             </button>
             {/* deepak start - new code: Content tab button */}
             <button
@@ -332,7 +351,7 @@ export default function HinduPopulationUploadPage() {
                   : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
               }`}
             >
-              📝 Content
+              ð Content
             </button>
             {/* deepak end - new code */}
           </div>
@@ -372,7 +391,7 @@ export default function HinduPopulationUploadPage() {
                       id="hp-file-input"
                     />
                     <label htmlFor="hp-file-input" className="cursor-pointer">
-                      <div className="mb-2 text-4xl">📂</div>
+                      <div className="mb-2 text-4xl">ð</div>
                       {file ? (
                         <div>
                           <p className="font-semibold text-gray-800">
@@ -407,7 +426,7 @@ export default function HinduPopulationUploadPage() {
                 >
                   {uploading ? (
                     <span className="flex items-center justify-center gap-2">
-                      <span className="animate-spin">⏳</span> Uploading to{" "}
+                      <span className="animate-spin">â³</span> Uploading to{" "}
                       {ENDPOINT_LABELS[apiEndpoint]}...
                     </span>
                   ) : (
@@ -416,13 +435,18 @@ export default function HinduPopulationUploadPage() {
                 </button>
 
                 {stats && (
-                  <div className="mt-6 grid grid-cols-4 gap-3">
+                  <div className="mt-6 grid grid-cols-5 gap-3">
                     {[
                       { label: "Total", value: stats.total, color: "gray" },
                       {
                         label: "Success",
                         value: stats.success,
                         color: "green",
+                      },
+                      {
+                        label: "Updated",
+                        value: stats.updated,
+                        color: "blue",
                       },
                       {
                         label: "Skipped",
@@ -467,13 +491,15 @@ export default function HinduPopulationUploadPage() {
                               ? "border border-green-100 bg-green-50 text-green-800"
                               : log.status === "skipped"
                                 ? "border border-yellow-100 bg-yellow-50 text-yellow-800"
-                                : "border border-red-100 bg-red-50 text-red-800"
+                                : log.status === "updated"
+                                      ? "border border-blue-100 bg-blue-50 text-blue-800"
+                                      : "border border-red-100 bg-red-50 text-red-800"
                           }`}
                         >
                           <span className="font-semibold">
                             Row {log.index}:
                           </span>{" "}
-                          {log.name} —{" "}
+                          {log.name} â{" "}
                           <span className="italic">{log.message}</span>
                         </div>
                       ))}
@@ -513,9 +539,9 @@ export default function HinduPopulationUploadPage() {
                       </div>
                       <div className="text-2xl">
                         {downloading === ep.value ? (
-                          <span className="inline-block animate-spin">⏳</span>
+                          <span className="inline-block animate-spin">â³</span>
                         ) : (
-                          "⬇️"
+                          "â¬ï¸"
                         )}
                       </div>
                     </button>
