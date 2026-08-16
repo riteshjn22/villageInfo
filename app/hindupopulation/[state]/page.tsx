@@ -9,8 +9,14 @@ import { cache } from "react";
 import {
   getHinduPopulationStates,
   getHinduPopulationDistricts,
+  getHinduPopulationContent,
 } from "@/utils/common";
 import { HOST } from "@/lib/constants/constants";
+// deepak start - new code: optional managed content (title/description/top/
+// bottom/blog) from the Hindu Population admin Content tab
+import HtmlContent from "@/components/htmlContent";
+import BlogSection from "@/components/BlogSection";
+// deepak end - new code
 
 export const revalidate = false;
 export const dynamicParams = true;
@@ -18,6 +24,11 @@ export const dynamicParams = true;
 const getCachedState = cache((state: string) =>
   getHinduPopulationStates({ state_slug: state }),
 );
+// deepak start - new code: cached content fetch for this state page
+const getCachedStateContent = cache((state: string) =>
+  getHinduPopulationContent("state", { state_slug: state }),
+);
+// deepak end - new code
 
 type Props = {
   params: Promise<{ state: string }>;
@@ -61,11 +72,17 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state } = await params;
   const stateData = (await getCachedState(state)) as StateData;
+  // deepak start - new code: managed content can override the SEO title/description
+  const content = await getCachedStateContent(state);
+  const hasContent = content && !content.error;
+  // deepak end - new code
 
   const title =
+    (hasContent && content.title) ||
     stateData?.seo_title ||
     `Hindu Population in ${stateData?.state ?? state} – Hindu Sex Ratio`;
   const description =
+    (hasContent && content.description) ||
     stateData?.seo_description ||
     `Hindu population, Hindu population percentage and Hindu sex ratio data for ${stateData?.state ?? state}.`;
 
@@ -84,16 +101,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function HinduPopulationStatePage({ params }: Props) {
   const { state } = await params;
 
-  const [stateData, districts] = await Promise.all([
+  const [stateData, districts, content] = await Promise.all([
     getCachedState(state) as Promise<StateData>,
     getHinduPopulationDistricts({ state_slug: state }) as Promise<
       DistrictListItem[]
     >,
+    getCachedStateContent(state),
   ]);
 
   if (!stateData || stateData?.status === 404) notFound();
 
   const districtList = Array.isArray(districts) ? districts : [];
+  // deepak start - new code: managed content for this state page
+  const hasContent = content && !content.error;
+  // deepak end - new code
 
   const {
     state: stateName,
@@ -262,6 +283,15 @@ export default async function HinduPopulationStatePage({ params }: Props) {
               <div className="vp-source-note">
                 ℹ️ Source: Census of India — Census {census_year}
               </div>
+              {/* deepak start - new code: managed top_content, rendered under the intro */}
+              {hasContent && content.top_content && (
+                <HtmlContent
+                  type="top"
+                  content={content.top_content}
+                  customClass="mb-0 mt-3"
+                />
+              )}
+              {/* deepak end - new code */}
             </div>
 
             <div className="vp-snapshot">
@@ -485,6 +515,15 @@ export default async function HinduPopulationStatePage({ params }: Props) {
                 </div>
               </div>
             )}
+
+            {/* deepak start - new code: managed blog + bottom content */}
+            {hasContent && content.blog_content && (
+              <BlogSection blogData={content.blog_content} />
+            )}
+            {hasContent && content.bottom_content && (
+              <HtmlContent type="bottom" content={content.bottom_content} />
+            )}
+            {/* deepak end - new code */}
           </main>
 
           <aside className="vp-sidebar">
