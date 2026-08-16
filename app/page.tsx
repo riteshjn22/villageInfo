@@ -8,6 +8,12 @@ import { HOST } from "@/lib/constants/constants";
 
 const BlogSection = dynamic(() => import("@/components/BlogSection"));
 
+// deepak start - new code: force per-request rendering so this page never
+// statically fetches getStates()/getContent() during `next build` (same fix
+// already applied to /hindupopulation).
+export const dynamic = "force-dynamic";
+// deepak end - new code
+
 const DEFAULT_METADATA = {
   title: "Village Info India | Explore States, Districts & Villages",
   description:
