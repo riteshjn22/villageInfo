@@ -15,6 +15,7 @@ import BlogSection from "@/components/BlogSection";
 // deepak end - new code
 
 export const revalidate = false;
+export const dynamic = "force-dynamic";
 
 type StateListItem = {
   state: string;
@@ -52,7 +53,7 @@ export default async function HinduPopulationIndexPage() {
     <main className="m-auto flex w-full flex-wrap p-4 md:max-w-275">
       <div className="flex w-full flex-col gap-4 rounded-2xl border border-gray-200 bg-linear-to-b from-slate-50 to-white p-4.5 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
         <h1 className="text-lg font-bold md:text-2xl">
-          {(hasContent && content.title) || "Hindu Population in India — By State"}
+          {(hasContent && content.title) || "Hindu Population in India â By State"}
         </h1>
         {/* deepak start - new code: managed top_content overrides the default intro paragraph */}
         {hasContent && content.top_content ? (
