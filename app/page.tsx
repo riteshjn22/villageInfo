@@ -3,10 +3,10 @@ import { getContent, getStates } from "@/utils/common";
 import LordIcon from "@/components/LordIcon";
 import { Metadata } from "next";
 import HtmlContent from "@/components/htmlContent";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { HOST } from "@/lib/constants/constants";
 
-const BlogSection = dynamic(() => import("@/components/BlogSection"));
+const BlogSection = nextDynamic(() => import("@/components/BlogSection"));
 
 // deepak start - new code: force per-request rendering so this page never
 // statically fetches getStates()/getContent() during `next build` (same fix
