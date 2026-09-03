@@ -148,8 +148,8 @@ export async function POST(req) {
     const { state_slug, district_slug } = body;
 
     if (state_slug && district_slug) {
-      revalidatePath(`/christianpopulation/${state_slug}/${district_slug}`);
-      revalidatePath(`/christianpopulation/${state_slug}`);
+      revalidatePath(`/christian/${state_slug}/${district_slug}`);
+      revalidatePath(`/christian/${state_slug}`);
     }
 
     // deepak start - new code: surface wasUpdate to the caller (dashboard
