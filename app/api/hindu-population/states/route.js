@@ -122,8 +122,8 @@ export async function POST(req) {
     const { state_slug } = body;
 
     if (state_slug) {
-      revalidatePath(`/hindupopulation/${state_slug}`);
-      revalidatePath("/hindupopulation");
+      revalidatePath(`/hindu/${state_slug}`);
+      revalidatePath("/hindu");
     }
 
     // deepak start - new code: surface wasUpdate to the caller (dashboard
