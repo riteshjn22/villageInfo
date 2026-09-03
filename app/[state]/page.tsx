@@ -245,7 +245,7 @@ export default async function StatePage({ params }: Props) {
     {
       label: "Buddhist",
       value: stateData.buddhist_population,
-      percent: stateData.Buddhist_population_percent,
+      percent: stateData.buddhist_population_percent,
     },
   ];
 
