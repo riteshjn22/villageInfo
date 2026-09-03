@@ -54,7 +54,7 @@ const SCHEMA_FIELDS: Record<string, string[]> = {
     "christian_population_percent",
     "sikh_population_percent",
     "jain_population_percent",
-    "Buddhist_population_percent",
+    "buddhist_population_percent",
     "literates_total",
     "literates_males",
     "literates_females",
