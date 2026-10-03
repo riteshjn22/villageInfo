@@ -131,13 +131,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = content?.description || villagesData?.seo_description;
 
   return {
-    title,
-    description,
-    openGraph: { title, description },
-    alternates: {
-      canonical: `${HOST}/${state}/${district}/${tehsil}/${village}`,
+  title,
+  description,
+
+  // noindex all village pages
+  robots: {
+    index: false,
+    follow: true,
+    googleBot: {
+      index: false,
+      follow: true,
     },
-  };
+  },
+
+  openGraph: { title, description },
+  alternates: {
+    canonical: `${HOST}/${state}/${district}/${tehsil}/${village}`,
+  },
+};
 }
 
 // ────────────────────────────────────────────────────────────
