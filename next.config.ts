@@ -67,6 +67,18 @@ const nextConfig: NextConfig = {
         destination: "/:state/:district/:tehsil",
         permanent: true,
       },
+
+      // Village sitemaps were removed — send old sitemap URLs to the main sitemap
+      {
+        source: "/villages-sitemap.xml",
+        destination: "/sitemap.xml",
+        permanent: true,
+      },
+      {
+        source: "/villages-sitemap/:page",
+        destination: "/sitemap.xml",
+        permanent: true,
+      },
     ];
   },
 };
