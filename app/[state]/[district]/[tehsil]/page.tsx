@@ -306,7 +306,6 @@ export default async function TehsilPage({ params }: Props) {
    // ...(topPopVillages ?? []).map((item: VillageItem) => ({
     ...(Array.isArray(topPopVillages) ? topPopVillages : []).map((item: VillageItem) => ({
       name: item?.village,
-      redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}/${item?.village_slug}`,
     })),
   ];
 
@@ -314,7 +313,6 @@ export default async function TehsilPage({ params }: Props) {
     //...(topLiterateVillages ?? []).map((item: VillageItem) => ({
     ...(Array.isArray(topLiterateVillages) ? topLiterateVillages : []).map((item: VillageItem) => ({
       name: item?.village,
-      redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}/${item?.village_slug}`,
     })),
   ];
 
