@@ -57,6 +57,16 @@ const nextConfig: NextConfig = {
         destination: "https://village.trendswe.com/:path*",
         permanent: true,
       },
+
+      // Village pages → their parent tehsil page
+      // e.g. /haryana/ambala/naraingarh/ahmadpur → /haryana/ambala/naraingarh
+      // Matches exactly 4 segments; reserved top-level paths are excluded.
+      {
+        source:
+          "/:state((?!(?:api|_next|blog|dashboard|login)/)[^/.]+)/:district/:tehsil/:village",
+        destination: "/:state/:district/:tehsil",
+        permanent: true,
+      },
     ];
   },
 };
