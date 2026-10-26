@@ -63,12 +63,17 @@ export default function List({ type, heading, data }: Props) {
               <tr className="text-left" key={item.name}>
                 <TD>{index + 1}</TD>
                 <TD>
-                  <Link
-                    className="text-[#2563eb]"
-                    href={`/${[item?.state_slug, item?.district_slug, item?.tehsil_slug, item?.village_slug].filter(Boolean).join("/")}`}
-                  >
-                    {item.name}
-                  </Link>
+                  {/* Village pages redirect to the tehsil, so villages are plain text */}
+                  {type === "tehsil" ? (
+                    <span className="text-[#0f172a]">{item.name}</span>
+                  ) : (
+                    <Link
+                      className="text-[#2563eb]"
+                      href={`/${[item?.state_slug, item?.district_slug, item?.tehsil_slug, item?.village_slug].filter(Boolean).join("/")}`}
+                    >
+                      {item.name}
+                    </Link>
+                  )}
                 </TD>
                 <TD>{item.population}</TD>
                 <TD>{item.total}</TD>
