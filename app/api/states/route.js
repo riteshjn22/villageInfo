@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import State from "@/lib/models/State";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { CACHE_HEADERS } from "@/lib/constants/constants";
 
 export async function GET(req) {
@@ -110,6 +110,8 @@ export async function POST(req) {
     if (state_slug) {
       revalidatePath(`/${state_slug}`); // clears the specific state page
       revalidatePath("/"); // clears the home page (lists all states)
+      // clear cached MongoDB data (lib/data.js) for this state
+      revalidateTag(`state-${state_slug}`, "max");
     }
 
     return NextResponse.json(state, { status: 201 });
