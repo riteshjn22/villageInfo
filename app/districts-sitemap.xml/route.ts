@@ -1,8 +1,9 @@
 import { HOST } from "@/lib/constants/constants";
-import { getDistricts, getStates } from "@/utils/common";
+import { getAllDistrictSlugs } from "@/lib/data";
 import { NextResponse } from "next/server";
 
-export const revalidate = 3600;
+// Rebuilt at most once a day (was hourly) — saves function CPU + ISR writes
+export const revalidate = 86400;
 
 // Escape special XML characters in URLs/values
 function escapeXml(str: string): string {
@@ -15,28 +16,11 @@ function escapeXml(str: string): string {
 }
 
 export async function GET() {
-    const states = await getStates();
-
-    // deepak start - old code (replaced below):
-    // const districtsByState = await Promise.all(
-    //   states.map((s: { state_slug: string }) =>
-    //     getDistricts({ state_slug: s.state_slug }),
-    //   ),
-    // );
-    // const districts = districtsByState.flat();
-    // deepak end - old code
-
-    // deepak start - new code: guard against getStates()/getDistricts() returning
-    // a non-array error object (e.g. on transient DB failure) so the build doesn't crash
-    const statesList = Array.isArray(states) ? states : [];
-
-    const districtsByState = await Promise.all(
-          statesList.map((s: { state_slug: string }) =>
-                  getDistricts({ state_slug: s.state_slug }),
-                             ),
-        );
-    const districts = districtsByState.filter((d) => Array.isArray(d)).flat();
-    // deepak end - new code
+  // One cached MongoDB query for all districts (was one HTTP call per state)
+  const districts = (await getAllDistrictSlugs()) as {
+    state_slug: string;
+    district_slug: string;
+  }[];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

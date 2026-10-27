@@ -11,7 +11,7 @@ import Population from "@/components/Population";
 import TopChip from "@/components/TopChip";
 import TopLeft from "@/components/TopLeft";
 import Workers from "@/components/Workers";
-import { getContent, getVillages } from "@/utils/common";
+import { getContent, getVillages } from "@/lib/data";
 import { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
@@ -112,7 +112,7 @@ type Props = {
 
 // deepak start - new code: skip build-time static generation entirely (avoids DB calls during build on the flaky free-tier cluster); pages are generated on-demand at request time instead (dynamicParams = true above)
 export async function generateStaticParams() {
-    return [];
+  return [];
 }
 // deepak end - new code
 
@@ -131,24 +131,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = content?.description || villagesData?.seo_description;
 
   return {
-  title,
-  description,
+    title,
+    description,
 
-  // noindex all village pages
-  robots: {
-    index: false,
-    follow: true,
-    googleBot: {
+    // noindex all village pages
+    robots: {
       index: false,
       follow: true,
+      googleBot: {
+        index: false,
+        follow: true,
+      },
     },
-  },
 
-  openGraph: { title, description },
-  alternates: {
-    canonical: `${HOST}/${state}/${district}/${tehsil}/${village}`,
-  },
-};
+    openGraph: { title, description },
+    alternates: {
+      canonical: `${HOST}/${state}/${district}/${tehsil}/${village}`,
+    },
+  };
 }
 
 // ────────────────────────────────────────────────────────────
@@ -273,7 +273,7 @@ export default async function VillagePage({ params }: Props) {
   ];
 
   const tehsilVillages = [
-   // ...(allVillages ?? [])
+    // ...(allVillages ?? [])
     ...(Array.isArray(allVillages) ? allVillages : [])
       .filter((item: VillageItem) => item?.village !== villagesData?.village) // ← exclude current village
       .map((item: VillageItem) => ({

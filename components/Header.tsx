@@ -12,7 +12,7 @@ function Header() {
   return (
     <header className="sticky top-0 z-50 bg-sky-950 p-4 text-white shadow-md shadow-indigo-200">
       <div className="m-auto flex w-full flex-wrap items-center justify-between md:max-w-275">
-        <Link href="/">
+        <Link prefetch={false} href="/">
           <h1 className="text-2xl font-bold">Village Trends</h1>
         </Link>
         {!isDashboard && <Navigation />}

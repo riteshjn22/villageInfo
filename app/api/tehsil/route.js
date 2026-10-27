@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Tehsil from "../../../lib/models/tehsil";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { CACHE_HEADERS } from "@/lib/constants/constants";
 
 export async function GET(req) {
@@ -35,13 +35,13 @@ export async function GET(req) {
 
       // Total count only — no browser cache needed (build-time only)
       const totalTehsils = await Tehsil.countDocuments();
-return NextResponse.json(
-  { totalTehsils },
-  {
-    status: 200,
-    headers: CACHE_HEADERS    // ← add this line
-  }
-);
+      return NextResponse.json(
+        { totalTehsils },
+        {
+          status: 200,
+          headers: CACHE_HEADERS, // ← add this line
+        },
+      );
     }
 
     // ── Case 1: All three slugs → single tehsil detail ───────────────────────
@@ -164,6 +164,8 @@ export async function POST(req) {
 
       revalidatePath(tehsilPath); // clears the specific tehsil page
       revalidatePath(districtPath); // clears the district listing page (shows tehsil list)
+      // clear cached MongoDB data (lib/data.js) for this tehsil
+      revalidateTag(`tehsil-${tehsil_slug}`, "max");
     }
 
     return NextResponse.json(tehsil, { status: 201 });

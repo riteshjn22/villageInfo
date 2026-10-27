@@ -1,7 +1,8 @@
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Content from "@/lib/models/content";
-import { CACHE_HEADERS } from "@/lib/constants/constants"
+import { CACHE_HEADERS } from "@/lib/constants/constants";
 
 // GET /api/content?page_id=home
 // GET /api/content?page_id=state&state_slug=maharashtra
@@ -40,9 +41,9 @@ export async function GET(req) {
     }
 
     return NextResponse.json(content, {
-            status: 200,
-            headers: CACHE_HEADERS,
-          });
+      status: 200,
+      headers: CACHE_HEADERS,
+    });
   } catch (error) {
     console.error("GET /content error:", error);
     return NextResponse.json(
@@ -126,6 +127,18 @@ export async function POST(req) {
         runValidators: true,
       },
     );
+    // clear cached page content (lib/data.js) for the most specific level edited
+    const contentTag = village_slug
+      ? `village-${village_slug}`
+      : tehsil_slug
+        ? `tehsil-${tehsil_slug}`
+        : district_slug
+          ? `district-${district_slug}`
+          : state_slug
+            ? `state-${state_slug}`
+            : `content-${String(page_id).toLowerCase()}`;
+    revalidateTag(contentTag, "max");
+
     return NextResponse.json(content, { status: 200 });
   } catch (error) {
     console.error("POST /content error:", error);

@@ -19,7 +19,11 @@ export default function Breadcrumb({ data }: Props) {
         <span key={item.label} className="flex items-center gap-1">
           {index > 0 && <span aria-hidden="true">›</span>}
           {item.redirectionUrl ? (
-            <Link href={item.redirectionUrl} className="text-indigo-600">
+            <Link
+              prefetch={false}
+              href={item.redirectionUrl}
+              className="text-indigo-600"
+            >
               {item.label}
             </Link>
           ) : (

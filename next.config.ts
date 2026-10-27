@@ -4,12 +4,37 @@ import path from "path";
 const nextConfig: NextConfig = {
   devIndicators: false,
   images: {
+    // Free-plan: serve images as-is instead of through Vercel Image Optimization
+    // (was over the Hobby transformation + cache-write limits, and hostname "**"
+    // let any site use our optimizer).
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
         hostname: "**",
       },
     ],
+  },
+  experimental: {
+    // Keep visited pages in the browser's router cache so back/forward and
+    // revisits don't re-request them from Vercel.
+    staleTimes: {
+      dynamic: 600, // 10 minutes
+      static: 3600, // 1 hour
+    },
+  },
+  // Browser caching for files in /public (Next serves them with max-age=0 by default)
+  async headers() {
+    const longCache = [
+      {
+        key: "Cache-Control",
+        value: "public, max-age=2592000, stale-while-revalidate=86400",
+      },
+    ];
+    return [
+      { source: "/images/:path*", headers: longCache },
+      { source: "/icons/:path*", headers: longCache },
+    ];
   },
   async redirects() {
     const host = { type: "host" as const, value: "village-info.vercel.app" };

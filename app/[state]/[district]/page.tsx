@@ -1,4 +1,9 @@
-import { getContent, getDistricts, getTehsils } from "@/utils/common";
+import {
+  getContent,
+  getDistricts,
+  getTehsils,
+  isValidStateSlug,
+} from "@/lib/data";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import HtmlContent from "@/components/htmlContent";
@@ -64,36 +69,38 @@ type TehsilItem = {
 
 // ─── Static Params ────────────────────────────────────────────────────────────
 export async function generateStaticParams() {
-    // deepak start - old code (replaced below):
-    // try {
-    //   await connectDB();
-    //
-    //   const districts = await District.find({})
-    //     .select("district_slug state_slug")
-    //     .lean();
-    //
-    //   return districts
-    //     .filter((d) => d?.state_slug && d?.district_slug)
-    //     .map((d) => ({
-    //       state: d.state_slug,
-    //       district: d.district_slug,
-    //     }));
-    // } catch (error) {
-    //   console.error("generateStaticParams error:", error);
-    //   return [];
-    // }
-    // deepak end - old code
+  // deepak start - old code (replaced below):
+  // try {
+  //   await connectDB();
+  //
+  //   const districts = await District.find({})
+  //     .select("district_slug state_slug")
+  //     .lean();
+  //
+  //   return districts
+  //     .filter((d) => d?.state_slug && d?.district_slug)
+  //     .map((d) => ({
+  //       state: d.state_slug,
+  //       district: d.district_slug,
+  //     }));
+  // } catch (error) {
+  //   console.error("generateStaticParams error:", error);
+  //   return [];
+  // }
+  // deepak end - old code
 
-    // deepak start - new code: skip build-time static generation entirely,
-    // pages are generated on-demand at request time instead (dynamicParams = true)
-    return [];
-    // deepak end - new code
+  // deepak start - new code: skip build-time static generation entirely,
+  // pages are generated on-demand at request time instead (dynamicParams = true)
+  return [];
+  // deepak end - new code
 }
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state, district } = await params;
+  // Junk URLs (bots) never reach MongoDB
+  if (!(await isValidStateSlug(state))) return {};
 
   // const [content, districtData] = await Promise.all([
   //   getContent("district", { state_slug: state, district_slug: district }),
@@ -125,6 +132,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function DistrictPage({ params }: Props) {
   const { state, district } = await params;
+  // Junk URLs (bots) never reach MongoDB
+  if (!(await isValidStateSlug(state))) notFound();
 
   // const [
   //   content,
@@ -354,23 +363,27 @@ export default async function DistrictPage({ params }: Props) {
     },
   ];
 
-  const tehsilData = (Array.isArray(tehsilsData) ? tehsilsData : []).map((item) => ({
-    name: item.tehsil,
-    population: item.total_population,
-    total: item.total_villages,
-    sex_ratio: `${item?.sex_ratio_percent?.toFixed(2)}%`,
-    literacy_rate: `${item?.literates_total_percent?.toFixed(2)}%`,
-    state_slug: item?.state_slug,
-    district_slug: item?.district_slug,
-    tehsil_slug: item?.tehsil_slug,
-  }));
+  const tehsilData = (Array.isArray(tehsilsData) ? tehsilsData : []).map(
+    (item) => ({
+      name: item.tehsil,
+      population: item.total_population,
+      total: item.total_villages,
+      sex_ratio: `${item?.sex_ratio_percent?.toFixed(2)}%`,
+      literacy_rate: `${item?.literates_total_percent?.toFixed(2)}%`,
+      state_slug: item?.state_slug,
+      district_slug: item?.district_slug,
+      tehsil_slug: item?.tehsil_slug,
+    }),
+  );
 
   const allOtherDistricts = [
-   // ...(allDistricts ?? []).map((item: District) => ({
-    ...(Array.isArray(allDistricts) ? allDistricts : []).map((item: District) => ({
-      name: item.district,
-      redirectionUrl: `/${item.state_slug}/${item.district_slug}`,
-    })),
+    // ...(allDistricts ?? []).map((item: District) => ({
+    ...(Array.isArray(allDistricts) ? allDistricts : []).map(
+      (item: District) => ({
+        name: item.district,
+        redirectionUrl: `/${item.state_slug}/${item.district_slug}`,
+      }),
+    ),
     {
       name: `View All ${districtData.state} Districts`,
       redirectionUrl: `/${state}`,
@@ -379,18 +392,22 @@ export default async function DistrictPage({ params }: Props) {
 
   const topPopulatedTehsils = [
     //...(topPopTehsils ?? []).map((item: TehsilItem) => ({
-    ...(Array.isArray(topPopTehsils) ? topPopTehsils : []).map((item: TehsilItem) => ({
-      name: item?.tehsil,
-      redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}`,
-    })),
+    ...(Array.isArray(topPopTehsils) ? topPopTehsils : []).map(
+      (item: TehsilItem) => ({
+        name: item?.tehsil,
+        redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}`,
+      }),
+    ),
   ];
 
   const topLitrTehsils = [
     //...(topLitTehsils ?? []).map((item: TehsilItem) => ({
-    ...(Array.isArray(topLitTehsils) ? topLitTehsils : []).map((item: TehsilItem) => ({
-      name: item?.tehsil,
-      redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}`,
-    })),
+    ...(Array.isArray(topLitTehsils) ? topLitTehsils : []).map(
+      (item: TehsilItem) => ({
+        name: item?.tehsil,
+        redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}`,
+      }),
+    ),
   ];
 
   // ─── Render ───────────────────────────────────────────────────────────────────
@@ -400,7 +417,7 @@ export default async function DistrictPage({ params }: Props) {
       <DistrictSchema
         d={districtData}
         state_slug={state}
-       // tehsils={tehsilsData}
+        // tehsils={tehsilsData}
         tehsils={Array.isArray(tehsilsData) ? tehsilsData : []}
       />
       <main className="m-auto flex w-full flex-wrap p-4 md:max-w-275">

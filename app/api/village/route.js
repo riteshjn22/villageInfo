@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Village from "../../../lib/models/village";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { SITE_MAP_PER_PAGE, CACHE_HEADERS } from "@/lib/constants/constants";
 
 export async function GET(req) {
@@ -181,6 +181,8 @@ export async function POST(req) {
 
       revalidatePath(villagePath); // clears the specific village page
       revalidatePath(tehsilPath); // clears the tehsil listing page (shows village list)
+      // clear cached MongoDB data (lib/data.js) for this tehsil's villages
+      revalidateTag(`tehsil-${tehsil_slug}`, "max");
     }
 
     return NextResponse.json(village, { status: 201 });

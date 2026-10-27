@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import District from "@/lib/models/district";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { CACHE_HEADERS } from "@/lib/constants/constants";
 
 export async function GET(req) {
@@ -171,6 +171,8 @@ export async function POST(req) {
 
       revalidatePath(districtPath); // clears the specific district page
       revalidatePath(statePath); // clears the state listing page (shows district list)
+      // clear cached MongoDB data (lib/data.js) for this district
+      revalidateTag(`district-${district_slug}`, "max");
     }
 
     return NextResponse.json(district, { status: 201 });

@@ -1,61 +1,32 @@
 import { HOST } from "@/lib/constants/constants";
-import { getStates, getDistricts, getTehsils } from "@/utils/common";
+import { getAllTehsilSlugs } from "@/lib/data";
 import { NextResponse } from "next/server";
 // deepak start - new code: escape XML special characters in slug values so a literal
 // "&" (e.g. the "north_&_middle_andaman" tehsil slug) doesn't produce invalid XML
 function escapeXml(str: string): string {
-if (str == null) return "";
-          return String(str).replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&apos;");
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
-// deepak end - new code 
+// deepak end - new code
 
-export const revalidate = 3600;
+// Rebuilt at most once a day (was hourly) — saves function CPU + ISR writes
+export const revalidate = 86400;
 
 export async function GET() {
-    const states = await getStates();
+  // One cached MongoDB query for all tehsils (was ~700 HTTP calls, one per district)
+  const tehsils = (await getAllTehsilSlugs()) as {
+    state_slug: string;
+    district_slug: string;
+    tehsil_slug: string;
+  }[];
 
-    // deepak start - old code (replaced below):
-    // const districtsByState = await Promise.all(
-    //   states.map((s: { state_slug: string }) =>
-    //     getDistricts({ state_slug: s.state_slug }),
-    //   ),
-    // );
-    // const districts = districtsByState.flat();
-    //
-    // const tehsilsByDistrict = await Promise.all(
-    //   districts.map((d: { state_slug: string; district_slug: string }) =>
-    //     getTehsils({ state_slug: d.state_slug, district_slug: d.district_slug }),
-    //   ),
-    // );
-    //
-    // const tehsils = tehsilsByDistrict.flat();
-    // deepak end - old code
-
-    // deepak start - new code: guard against getStates()/getDistricts()/getTehsils()
-    // returning a non-array error object (e.g. on transient DB failure) so the build doesn't crash
-    const statesList = Array.isArray(states) ? states : [];
-
-    const districtsByState = await Promise.all(
-          statesList.map((s: { state_slug: string }) =>
-                  getDistricts({ state_slug: s.state_slug }),
-                             ),
-        );
-    const districts = districtsByState.filter((d) => Array.isArray(d)).flat();
-
-    const tehsilsByDistrict = await Promise.all(
-          districts.map((d: { state_slug: string; district_slug: string }) =>
-                  getTehsils({ state_slug: d.state_slug, district_slug: d.district_slug }),
-                            ),
-        );
-    const tehsils = tehsilsByDistrict.filter((t) => Array.isArray(t)).flat();
-    // deepak end - new code
-
-    // deepak: slug values below are wrapped in escapeXml() to prevent invalid XML
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+  // deepak: slug values below are wrapped in escapeXml() to prevent invalid XML
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${tehsils
   .map(
