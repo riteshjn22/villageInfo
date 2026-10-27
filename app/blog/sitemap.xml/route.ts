@@ -6,7 +6,7 @@ const WP_API = `${process.env.NEXT_PUBLIC_WP_URL}/wp-json/wp/v2`;
 async function getAllCategories() {
   const res = await fetch(
     `${WP_API}/categories?per_page=100&_fields=id,slug,count`,
-    { next: { revalidate: 3600 } },
+    { next: { revalidate: 86400 } },
   );
   if (!res.ok) return [];
   const categories = await res.json();
