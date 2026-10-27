@@ -12,14 +12,19 @@ import TopChip from "@/components/TopChip";
 import TopLeft from "@/components/TopLeft";
 import Workers from "@/components/Workers";
 import { HOST } from "@/lib/constants/constants";
-import { getContent, getTehsils, getVillages } from "@/utils/common";
+import {
+  getContent,
+  getTehsils,
+  getVillages,
+  isValidStateSlug,
+} from "@/lib/data";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { connectDB } from "@/lib/mongodb";
 import Tehsil from "@/lib/models/tehsil";
 
-export const revalidate = 604800;
+export const revalidate = false;
 export const dynamicParams = true;
 
 // ─── Cached Fetchers ──────────────────────────────────────────────────────────
@@ -98,7 +103,7 @@ type VillageItem = {
 
 // deepak start - new code: skip build-time static generation entirely (avoids DB calls during build on the flaky free-tier cluster); pages are generated on-demand at request time instead (dynamicParams = true above)
 export async function generateStaticParams() {
-    return [];
+  return [];
 }
 // deepak end - new code
 
@@ -106,6 +111,8 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state, district, tehsil } = await params;
+  // Junk URLs (bots) never reach MongoDB
+  if (!(await isValidStateSlug(state))) return {};
 
   const [content, tehsilData] = await Promise.all([
     getCachedContent(state, district, tehsil),
@@ -133,6 +140,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function TehsilPage({ params }: Props) {
   const { state, district, tehsil } = await params;
+  // Junk URLs (bots) never reach MongoDB
+  if (!(await isValidStateSlug(state))) notFound();
 
   const [
     content,
@@ -278,24 +287,28 @@ export default async function TehsilPage({ params }: Props) {
     },
   ];
 
-  const villageData = (Array.isArray(villagesData) ? villagesData : []).map((item) => ({
-    name: item.village,
-    population: item.total_population,
-    total: item.number_of_households,
-    sex_ratio: `${item.sex_ratio_percent?.toFixed(2)}%`,
-    literacy_rate: `${item.literates_total_percent?.toFixed(2)}%`,
-    state_slug: item.state_slug,
-    district_slug: item.district_slug,
-    tehsil_slug: item.tehsil_slug,
-    village_slug: item.village_slug,
-  }));
+  const villageData = (Array.isArray(villagesData) ? villagesData : []).map(
+    (item) => ({
+      name: item.village,
+      population: item.total_population,
+      total: item.number_of_households,
+      sex_ratio: `${item.sex_ratio_percent?.toFixed(2)}%`,
+      literacy_rate: `${item.literates_total_percent?.toFixed(2)}%`,
+      state_slug: item.state_slug,
+      district_slug: item.district_slug,
+      tehsil_slug: item.tehsil_slug,
+      village_slug: item.village_slug,
+    }),
+  );
 
   const otherTehsils = [
-   // ...(allTehsils ?? []).map((item: TehsilItem) => ({
-    ...(Array.isArray(allTehsils) ? allTehsils : []).map((item: TehsilItem) => ({
-      name: item?.tehsil,
-      redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}`,
-    })),
+    // ...(allTehsils ?? []).map((item: TehsilItem) => ({
+    ...(Array.isArray(allTehsils) ? allTehsils : []).map(
+      (item: TehsilItem) => ({
+        name: item?.tehsil,
+        redirectionUrl: `/${item.state_slug}/${item.district_slug}/${item?.tehsil_slug}`,
+      }),
+    ),
     {
       name: `View All ${tehsilData.district} Tehsils`,
       redirectionUrl: `/${tehsilData.state_slug}/${tehsilData.district_slug}`,
@@ -303,17 +316,21 @@ export default async function TehsilPage({ params }: Props) {
   ];
 
   const topPopulatesVillages = [
-   // ...(topPopVillages ?? []).map((item: VillageItem) => ({
-    ...(Array.isArray(topPopVillages) ? topPopVillages : []).map((item: VillageItem) => ({
-      name: item?.village,
-    })),
+    // ...(topPopVillages ?? []).map((item: VillageItem) => ({
+    ...(Array.isArray(topPopVillages) ? topPopVillages : []).map(
+      (item: VillageItem) => ({
+        name: item?.village,
+      }),
+    ),
   ];
 
   const topLitVillages = [
     //...(topLiterateVillages ?? []).map((item: VillageItem) => ({
-    ...(Array.isArray(topLiterateVillages) ? topLiterateVillages : []).map((item: VillageItem) => ({
-      name: item?.village,
-    })),
+    ...(Array.isArray(topLiterateVillages) ? topLiterateVillages : []).map(
+      (item: VillageItem) => ({
+        name: item?.village,
+      }),
+    ),
   ];
 
   // ─── Render ───────────────────────────────────────────────────────────────────
