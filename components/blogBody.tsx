@@ -25,6 +25,7 @@ export default function BlogBody({
 }) {
   return (
     <Link
+      prefetch={false}
       href={item?.url}
       className="flex items-center overflow-hidden rounded-lg border border-gray-300 transition hover:bg-gray-100"
     >

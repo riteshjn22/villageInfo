@@ -12,9 +12,9 @@ type Props = {
 
 export default function PopularList({ heading, listData }: Props) {
   return (
-    <div className="flex w-full flex-col border border-gray-200 p-4 rounded-xl shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-      <h3 className="text-[#0f172a] font-bold">{heading}</h3>
-      <ul className="flex flex-col mt-4">
+    <div className="flex w-full flex-col rounded-xl border border-gray-200 p-4 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
+      <h3 className="font-bold text-[#0f172a]">{heading}</h3>
+      <ul className="mt-4 flex flex-col">
         {listData?.map((item, index) => (
           <li
             key={item.redirectionUrl ?? `${item.name}-${index}`}
@@ -22,13 +22,14 @@ export default function PopularList({ heading, listData }: Props) {
           >
             {item.redirectionUrl ? (
               <Link
+                prefetch={false}
                 href={item.redirectionUrl}
-                className="flex w-full py-2 text-[#2563eb] leading-normal"
+                className="flex w-full py-2 leading-normal text-[#2563eb]"
               >
                 {item.name}
               </Link>
             ) : (
-              <span className="flex w-full py-2 text-[#0f172a] leading-normal">
+              <span className="flex w-full py-2 leading-normal text-[#0f172a]">
                 {item.name}
               </span>
             )}

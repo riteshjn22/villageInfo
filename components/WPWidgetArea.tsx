@@ -11,15 +11,16 @@ function toLocalUrl(url: string | undefined): string {
       ? new URL(process.env.NEXT_PUBLIC_WP_URL).origin
       : null;
     if (wpOrigin && parsed.origin === wpOrigin) {
-            // deepak start - old code (replaced below):
-            // return `${HOST}/blog${parsed.pathname}${parsed.search}${parsed.hash}`;
-            // deepak end - old code
-            // deepak start - new code: avoid double "/blog" prefix when WP pathname already starts with /blog (e.g. post permalinks)
-            const path = parsed.pathname.startsWith("/blog/") || parsed.pathname === "/blog"
-              ? parsed.pathname
-                      : `/blog${parsed.pathname}`;
-            return `${HOST}${path}${parsed.search}${parsed.hash}`;
-            // deepak end - new code
+      // deepak start - old code (replaced below):
+      // return `${HOST}/blog${parsed.pathname}${parsed.search}${parsed.hash}`;
+      // deepak end - old code
+      // deepak start - new code: avoid double "/blog" prefix when WP pathname already starts with /blog (e.g. post permalinks)
+      const path =
+        parsed.pathname.startsWith("/blog/") || parsed.pathname === "/blog"
+          ? parsed.pathname
+          : `/blog${parsed.pathname}`;
+      return `${HOST}${path}${parsed.search}${parsed.hash}`;
+      // deepak end - new code
     }
   } catch {
     // relative URL or invalid — return as-is
@@ -102,6 +103,7 @@ function ItemList({ items }: { items: WidgetItem[] }) {
       {items.map((item, i) => (
         <li key={item.id ?? i}>
           <Link
+            prefetch={false}
             href={toLocalUrl(item.url)}
             className="text-sm text-gray-700 hover:text-black hover:underline"
           >
@@ -130,6 +132,7 @@ function RecentPostsList({ items }: { items: WidgetItem[] }) {
           )}
           <div>
             <Link
+              prefetch={false}
               href={toLocalUrl(item.url)}
               className="text-sm font-medium text-gray-800 hover:underline"
             >
@@ -152,7 +155,11 @@ function RecentCommentsList({ items }: { items: WidgetItem[] }) {
     <ul className="space-y-2">
       {items.map((item, i) => (
         <li key={item.id ?? i}>
-          <Link href={toLocalUrl(item.url)} className="text-sm hover:underline">
+          <Link
+            prefetch={false}
+            href={toLocalUrl(item.url)}
+            className="text-sm hover:underline"
+          >
             <span className="font-medium">{item.author}</span>
             <span className="text-gray-500"> on {item.post_title}</span>
           </Link>
@@ -170,6 +177,7 @@ function TagCloud({ items }: { items: WidgetItem[] }) {
     <div className="flex flex-wrap gap-2">
       {items.map((tag, i) => (
         <Link
+          prefetch={false}
           key={tag.id ?? i}
           href={toLocalUrl(tag.url)}
           className="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-600 hover:border-gray-400 hover:text-black"
@@ -193,6 +201,7 @@ function RssFeed({ widget }: { widget: Widget }) {
             <li key={i}>
               {/* RSS items point to external URLs — no toLocalUrl */}
               <Link
+                prefetch={false}
                 href={item.url}
                 className="text-sm text-gray-700 hover:underline"
                 target="_blank"
@@ -223,7 +232,11 @@ function ImageWidget({ widget }: { widget: Widget }) {
     />
   );
   return widget?.raw?.link_url ? (
-    <Link href={toLocalUrl(widget?.raw?.link_url)} target="_blank">
+    <Link
+      prefetch={false}
+      href={toLocalUrl(widget?.raw?.link_url)}
+      target="_blank"
+    >
       {img}
     </Link>
   ) : (

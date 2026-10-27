@@ -8,12 +8,17 @@ function Navigation() {
     <div className="flex">
       <ul className="flex gap-4">
         <li>
-          <Link href="/" className={pathname === "/" ? "font-bold" : ""}>
+          <Link
+            prefetch={false}
+            href="/"
+            className={pathname === "/" ? "font-bold" : ""}
+          >
             Home
           </Link>
         </li>
         <li>
           <Link
+            prefetch={false}
             href="/blog"
             className={pathname.startsWith("/blog") ? "font-bold" : ""}
           >

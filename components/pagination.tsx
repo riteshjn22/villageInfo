@@ -17,6 +17,7 @@ export default function Pagination({
     <div className="mt-6 flex items-center justify-center gap-2">
       {currentPage > 1 && (
         <Link
+          prefetch={false}
           href={`${basePath}?page=${currentPage - 1}`}
           className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100"
         >
@@ -25,6 +26,7 @@ export default function Pagination({
       )}
       {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
         <Link
+          prefetch={false}
           key={p}
           href={`${basePath}?page=${p}`}
           className={`rounded border px-4 py-2 text-sm ${
@@ -38,6 +40,7 @@ export default function Pagination({
       ))}
       {currentPage < totalPages && (
         <Link
+          prefetch={false}
           href={`${basePath}?page=${currentPage + 1}`}
           className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100"
         >
